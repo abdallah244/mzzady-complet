@@ -1,0 +1,390 @@
+<p align="center">
+  <img src="https://img.shields.io/badge/Mazzady-Auction%20Platform-gold?style=for-the-badge&logo=shopify&logoColor=white" alt="Mazzady"/>
+</p>
+
+<h1 align="center">🏆 Mazzady - منصة المزادات الإلكترونية</h1>
+
+<p align="center">
+  <strong>منصة مزادات إلكترونية متكاملة مبنية بأحدث التقنيات</strong>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Angular-v19-DD0031?style=flat-square&logo=angular&logoColor=white" alt="Angular"/>
+  <img src="https://img.shields.io/badge/NestJS-v10-E0234E?style=flat-square&logo=nestjs&logoColor=white" alt="NestJS"/>
+  <img src="https://img.shields.io/badge/MongoDB-v7-47A248?style=flat-square&logo=mongodb&logoColor=white" alt="MongoDB"/>
+  <img src="https://img.shields.io/badge/TypeScript-v5.4-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript"/>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License"/>
+  <img src="https://img.shields.io/badge/Status-Active-brightgreen?style=flat-square" alt="Status"/>
+  <img src="https://img.shields.io/badge/PRs-Welcome-blue?style=flat-square" alt="PRs Welcome"/>
+</p>
+
+---
+
+## � التوثيق الكامل
+
+> **للتوثيق المفصل بالعربي، راجع مجلد [`docs/`](./docs/)**
+
+| 📄 الملف                                        | 📝 الوصف                            |
+| ----------------------------------------------- | ----------------------------------- |
+| [🚀 دليل التشغيل](./docs/INSTALLATION.md)       | كيفية تثبيت وتشغيل المشروع          |
+| [🔐 نظام المصادقة](./docs/FEATURES_AUTH.md)     | التسجيل، تسجيل الدخول، OAuth        |
+| [🏆 نظام المزادات](./docs/FEATURES_AUCTIONS.md) | المزادات، المزايدات، أنواع المزادات |
+| [💰 نظام المحفظة](./docs/FEATURES_WALLET.md)    | المحفظة، الإيداع، السحب             |
+| [👨‍💼 لوحة التحكم](./docs/FEATURES_ADMIN.md)      | إدارة المنصة والمستخدمين            |
+| [📡 مرجع الـ API](./docs/API_REFERENCE.md)      | جميع نقاط النهاية                   |
+
+---
+
+## �📋 جدول المحتويات
+
+- [🎯 نظرة عامة](#-نظرة-عامة)
+- [✨ المميزات](#-المميزات)
+- [🛠️ التقنيات المستخدمة](#️-التقنيات-المستخدمة)
+- [🚀 البدء السريع](#-البدء-السريع)
+- [📁 هيكل المشروع](#-هيكل-المشروع)
+- [🔐 نظام المصادقة](#-نظام-المصادقة)
+- [💰 نظام المحفظة والدفع](#-نظام-المحفظة-والدفع)
+- [🔔 نظام الإشعارات](#-نظام-الإشعارات)
+- [👨‍💼 لوحة التحكم](#-لوحة-التحكم)
+- [🤝 المساهمة](#-المساهمة)
+
+---
+
+## 🎯 نظرة عامة
+
+**Mazzady** هي منصة مزادات إلكترونية شاملة تتيح للمستخدمين:
+
+- 🛒 **المشاركة في المزادات** - مزايدة على المنتجات المتنوعة
+- 💼 **بيع المنتجات** - إنشاء مزادات لبيع منتجاتك
+- 💳 **نظام دفع آمن** - محفظة إلكترونية مع دعم InstaPay
+- ⭐ **تقييم البائعين** - نظام إعجابات وتقييمات للبائعين
+- 🔔 **إشعارات فورية** - تنبيهات للمزايدات والمعاملات
+
+---
+
+## ✨ المميزات
+
+<table>
+<tr>
+<td width="50%">
+
+### 🏠 للمستخدمين
+
+- ✅ تسجيل وتسجيل دخول (Email/OAuth)
+- ✅ التحقق من البريد الإلكتروني
+- ✅ التحقق من الهوية (National ID)
+- ✅ صفحة بروفايل كاملة
+- ✅ محفظة إلكترونية
+- ✅ المشاركة في المزادات
+- ✅ المزايدة التلقائية (Auto-Bid)
+- ✅ قائمة المتابعة (Watchlist)
+- ✅ سلة المشتريات
+- ✅ تتبع الشحنات
+- ✅ نظام النقاط والمكافآت
+
+</td>
+<td width="50%">
+
+### 👨‍💼 للإدارة
+
+- ✅ لوحة تحكم شاملة
+- ✅ إدارة المستخدمين
+- ✅ إدارة المزادات
+- ✅ الموافقة على طلبات الإيداع
+- ✅ إرسال رسائل للمستخدمين
+- ✅ التحقق من الهويات
+- ✅ إدارة المنتجات
+- ✅ تقارير وإحصائيات
+- ✅ نظام خدمة العملاء
+- ✅ إدارة طلبات التوظيف
+
+</td>
+</tr>
+</table>
+
+---
+
+## 🛠️ التقنيات المستخدمة
+
+### Frontend
+
+```
+Angular 19          → Framework
+Standalone Components → Architecture
+Signals            → State Management
+SASS               → Styling
+RxJS               → Reactive Programming
+```
+
+### Backend
+
+```
+NestJS 10          → Framework
+MongoDB            → Database
+Mongoose           → ODM
+JWT                → Authentication
+Passport           → OAuth (Google/Facebook)
+Multer             → File Upload
+Nodemailer         → Email Service
+```
+
+### DevOps & Tools
+
+```
+TypeScript 5.4     → Language
+ESLint             → Linting
+Git                → Version Control
+```
+
+---
+
+## 🚀 البدء السريع
+
+### المتطلبات
+
+- Node.js 18+
+- MongoDB 7+
+- npm أو yarn
+
+### التثبيت
+
+```bash
+# 1️⃣ استنساخ المشروع
+git clone https://github.com/your-username/mazzady.git
+cd mazzady
+
+# 2️⃣ تثبيت Backend
+cd backend
+npm install
+cp .env.example .env  # إعداد متغيرات البيئة
+
+# 3️⃣ تثبيت Frontend
+cd ../frontend
+npm install
+
+# 4️⃣ تشغيل المشروع
+# Terminal 1 - Backend
+cd backend && npm run start:dev
+
+# Terminal 2 - Frontend
+cd frontend && npm start
+```
+
+### الروابط
+
+| الخدمة      | الرابط                    |
+| ----------- | ------------------------- |
+| Frontend    | http://localhost:4200     |
+| Backend API | http://localhost:3000     |
+| API Docs    | http://localhost:3000/api |
+
+---
+
+## 📁 هيكل المشروع
+
+```
+mazzady/
+├── 📂 frontend/                 # Angular Application
+│   ├── 📂 src/
+│   │   ├── 📂 app/
+│   │   │   ├── 📂 admin/        # Admin Components
+│   │   │   ├── 📂 auctions/     # Auction Pages
+│   │   │   ├── 📂 auth/         # Login/Register
+│   │   │   ├── 📂 cart/         # Shopping Cart
+│   │   │   ├── 📂 core/         # Services & Guards
+│   │   │   ├── 📂 home/         # Home Page
+│   │   │   ├── 📂 profile/      # User Profile
+│   │   │   └── 📂 shared/       # Shared Components
+│   │   ├── 📂 environments/
+│   │   └── 📂 styles/
+│   └── 📄 angular.json
+│
+├── 📂 backend/                  # NestJS Application
+│   ├── 📂 src/
+│   │   ├── 📂 auth/             # Authentication
+│   │   ├── 📂 auctions/         # Auctions Module
+│   │   ├── 📂 bids/             # Bidding System
+│   │   ├── 📂 cart/             # Cart Management
+│   │   ├── 📂 notifications/    # Notifications
+│   │   ├── 📂 products/         # Products Module
+│   │   ├── 📂 schemas/          # MongoDB Schemas
+│   │   ├── 📂 seller-likes/     # Seller Rating
+│   │   └── 📄 main.ts
+│   └── 📄 package.json
+│
+├── 📂 uploads/                  # Uploaded Files
+├── 📄 README.md
+├── 📄 PROJECT_SUMMARY_AR.md
+└── 📄 BUGS_AND_ISSUES.md
+```
+
+---
+
+## 🔐 نظام المصادقة
+
+### طرق التسجيل
+
+| الطريقة     | الوصف                      |
+| ----------- | -------------------------- |
+| 📧 Email    | تسجيل بالبريد + كود التحقق |
+| 🔵 Google   | OAuth 2.0                  |
+| 🔷 Facebook | OAuth 2.0                  |
+
+### التحقق من الهوية
+
+```
+1️⃣ رفع صورة البطاقة (الوجه)
+2️⃣ رفع صورة البطاقة (الظهر)
+3️⃣ مراجعة الأدمن
+4️⃣ الموافقة/الرفض مع السبب
+```
+
+---
+
+## 💰 نظام المحفظة والدفع
+
+### شحن المحفظة
+
+```
+المستخدم ──► طلب إيداع ──► رفع صورة الحوالة ──► مراجعة الأدمن
+                                                    │
+                                         ┌──────────┴──────────┐
+                                         ▼                     ▼
+                                    ✅ موافقة              ❌ رفض
+                                    إضافة للرصيد          إشعار بالسبب
+```
+
+### عملية الشراء
+
+1. ✅ إضافة للسلة
+2. ✅ اختيار طريقة الشحن (بري/جوي)
+3. ✅ إدخال عنوان الشحن
+4. ✅ الدفع من المحفظة
+5. ✅ إصدار الفاتورة
+6. ✅ تتبع الشحنة
+
+---
+
+## 🔔 نظام الإشعارات
+
+| النوع           | الوصف              |
+| --------------- | ------------------ |
+| 🔔 مزايدة جديدة | عند تجاوز مزايدتك  |
+| ✅ فوز بمزاد    | عند الفوز بمنتج    |
+| 💰 إيداع        | موافقة/رفض الإيداع |
+| 📦 شحن          | تحديثات الشحنة     |
+| 💬 رسائل        | ردود خدمة العملاء  |
+
+---
+
+## 👨‍💼 لوحة التحكم
+
+### الصفحات المتاحة
+
+| الصفحة              | الوظيفة                  |
+| ------------------- | ------------------------ |
+| 👥 إدارة المستخدمين | عرض/تعديل/حظر المستخدمين |
+| 🏷️ إدارة المزادات   | إنشاء/تعديل/حذف المزادات |
+| 📦 إدارة المنتجات   | الموافقة على المنتجات    |
+| 💳 طلبات الإيداع    | موافقة/رفض الإيداعات     |
+| 🆔 التحقق من الهوية | مراجعة بطاقات الهوية     |
+| 💬 خدمة العملاء     | الرد على التذاكر         |
+| 📧 إرسال رسائل      | التواصل مع المستخدمين    |
+| 💼 طلبات التوظيف    | مراجعة CVs               |
+
+---
+
+## ❤️ نظام الإعجابات للبائعين
+
+نظام يتيح للمستخدمين إبداء إعجابهم بالبائعين:
+
+### المميزات
+
+- 👆 إضافة/إزالة إعجاب بضغطة واحدة
+- 💾 حفظ تلقائي في قاعدة البيانات
+- 🔄 تحديث فوري للعداد
+- ❤️ أيقونة قلب متحركة
+
+### API Endpoints
+
+```
+POST   /seller-likes              → Toggle like
+GET    /seller-likes/:id/count    → Get likes count
+GET    /seller-likes/sellers/stats → Get all sellers stats
+```
+
+---
+
+## 📊 الإحصائيات والتقارير
+
+```
+📈 إحصائيات المستخدم:
+   • عدد المزايدات
+   • نسبة الفوز
+   • إجمالي المشتريات
+   • النقاط المكتسبة
+
+📊 إحصائيات الأدمن:
+   • إجمالي المستخدمين
+   • المزادات النشطة
+   • حجم المعاملات
+   • طلبات معلقة
+```
+
+---
+
+## 🆕 آخر التحديثات
+
+### v2.0.0 (يناير 2026)
+
+- ✅ نظام الإعجابات للبائعين (Seller Likes)
+- ✅ إصلاح CORS headers
+- ✅ إصلاح API Response formats
+- ✅ استبدال URLs المضمنة بـ environment
+- ✅ تحسين Payment Details Modal
+- ✅ إصلاح null safety issues
+
+---
+
+## 🐛 المشاكل المعروفة والحلول
+
+راجع ملف [BUGS_AND_ISSUES.md](BUGS_AND_ISSUES.md) لقائمة المشاكل المحلولة والمعلقة.
+
+---
+
+## 🤝 المساهمة
+
+نرحب بمساهماتكم!
+
+```bash
+# 1. Fork the repository
+# 2. Create your feature branch
+git checkout -b feature/amazing-feature
+
+# 3. Commit your changes
+git commit -m 'Add amazing feature'
+
+# 4. Push to the branch
+git push origin feature/amazing-feature
+
+# 5. Open a Pull Request
+```
+
+---
+
+## 📝 الترخيص
+
+هذا المشروع مرخص تحت [MIT License](LICENSE)
+
+---
+
+<p align="center">
+  <strong>صُنع بـ ❤️ في مصر 🇪🇬</strong>
+</p>
+
+<p align="center">
+  <a href="#-mazzady---منصة-المزادات-الإلكترونية">⬆️ العودة للأعلى</a>
+</p>
