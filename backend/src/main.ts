@@ -198,7 +198,10 @@ async function bootstrap() {
     }, 60000); // Every minute
   } catch (error) {
     logger.error('Failed to start application', error);
-    process.exit(1);
+    if (!process.env.VERCEL) {
+      process.exit(1);
+    }
+    throw error;
   }
 }
 
@@ -207,6 +210,11 @@ if (!process.env.VERCEL) {
 }
 
 export default async (req: any, res: any) => {
-  const appInstance = await bootstrap();
-  return appInstance(req, res);
+  try {
+    const appInstance = await bootstrap();
+    return appInstance(req, res);
+  } catch (err: any) {
+    console.error('VERCEL CRASH ERROR:', err);
+    res.status(500).send(`Server Error: ${err.message || String(err)}\nStack: ${err.stack}`);
+  }
 };
