@@ -1,59 +1,343 @@
-# Frontend
+<div align="center">
+  
+# 🏪 Mazzadi - Frontend
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.0.4.
+### منصة المزادات الإلكترونية العربية الأولى
 
-## Development server
+[![Angular](https://img.shields.io/badge/Angular-DD0031?style=for-the-badge&logo=angular&logoColor=white)](https://angular.io/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![SASS](https://img.shields.io/badge/Sass-CC6699?style=for-the-badge&logo=sass&logoColor=white)](https://sass-lang.com/)
+[![RxJS](https://img.shields.io/badge/RxJS-B7178C?style=for-the-badge&logo=reactivex&logoColor=white)](https://rxjs.dev/)
+[![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://vercel.com/)
 
-To start a local development server, run:
+![Angular Version](https://img.shields.io/badge/Angular-21-red)
+![License](https://img.shields.io/badge/license-MIT-blue)
+![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)
+
+</div>
+
+---
+
+## 📋 جدول المحتويات
+
+- [نظرة عامة](#-نظرة-عامة)
+- [المميزات](#-المميزات)
+- [التقنيات المستخدمة](#-التقنيات-المستخدمة)
+- [لقطات الشاشة](#-لقطات-الشاشة)
+- [التثبيت والإعداد](#-التثبيت-والإعداد)
+- [هيكل المشروع](#-هيكل-المشروع)
+- [تشغيل المشروع](#-تشغيل-المشروع)
+- [النشر](#-النشر)
+
+---
+
+## 🎯 نظرة عامة
+
+**Mazzadi Frontend** هو تطبيق ويب حديث لمنصة مزادات إلكترونية، مبني باستخدام Angular 21 مع تصميم متجاوب وأداء عالي. يوفر تجربة مستخدم سلسة للمشاركة في المزادات، إدارة المنتجات، والتواصل الفوري.
+
+---
+
+## ✨ المميزات
+
+### 🎨 واجهة المستخدم
+
+- تصميم عصري وأنيق (Modern UI/UX)
+- دعم كامل للغة العربية (RTL)
+- تصميم متجاوب (Responsive Design)
+- وضع الليل/النهار (Dark/Light Mode)
+- أنيميشن سلس ومتقدم
+
+### 🏷️ صفحات المزادات
+
+- **الصفحة الرئيسية** - عرض المزادات المميزة والجديدة
+- **تصفح المزادات** - مع فلاتر وبحث متقدم
+- **تفاصيل المزاد** - معلومات شاملة وصور متعددة
+- **المزايدة المباشرة** - Real-time bidding
+- **المزايدة التلقائية** - Auto-bid setup
+
+### 👤 إدارة الحساب
+
+- تسجيل وتسجيل دخول
+- الملف الشخصي
+- إعدادات الحساب
+- سجل المزادات
+- قائمة المفضلة
+
+### 💰 المحفظة والمالية
+
+- عرض الرصيد
+- سجل المعاملات
+- طلبات السحب والإيداع
+- نقاط الولاء
+
+### 💬 التواصل
+
+- دردشة فورية مع البائعين
+- الإشعارات (Push Notifications)
+- مركز الرسائل
+- دعم العملاء
+
+### 📦 إدارة المنتجات (للبائعين)
+
+- إضافة منتجات جديدة
+- إنشاء مزادات
+- إدارة المزادات النشطة
+- تتبع المبيعات
+
+### 👨‍💼 لوحة التحكم (للمسؤولين)
+
+- إحصائيات شاملة
+- إدارة المستخدمين
+- إدارة المزادات
+- معالجة الشكاوى
+- التقارير المالية
+
+---
+
+## 🛠️ التقنيات المستخدمة
+
+| التقنية              | الوصف                     |
+| -------------------- | ------------------------- |
+| **Angular 21**       | إطار عمل الواجهة الأمامية |
+| **TypeScript**       | لغة البرمجة               |
+| **SASS/SCSS**        | معالج CSS                 |
+| **RxJS**             | البرمجة التفاعلية         |
+| **Angular Material** | مكتبة المكونات            |
+| **NgRx**             | إدارة الحالة              |
+| **Socket.io Client** | الاتصال الفوري            |
+| **Chart.js**         | الرسوم البيانية           |
+| **Swiper**           | السلايدر                  |
+
+---
+
+## 📸 لقطات الشاشة
+
+<div align="center">
+
+| الصفحة الرئيسية | صفحة المزاد |
+| :-------------: | :---------: |
+|     🏠 Home     | 🏷️ Auction  |
+
+| لوحة التحكم  | الملف الشخصي |
+| :----------: | :----------: |
+| 📊 Dashboard |  👤 Profile  |
+
+</div>
+
+---
+
+## 🚀 التثبيت والإعداد
+
+### المتطلبات
+
+- Node.js >= 18.0.0
+- npm >= 9.0.0
+- Angular CLI >= 21.0.0
+
+### خطوات التثبيت
 
 ```bash
+# استنساخ المشروع
+git clone https://github.com/your-username/mazzadi-frontend.git
+
+# الانتقال للمجلد
+cd mazzadi-frontend
+
+# تثبيت الحزم
+npm install
+
+# تثبيت Angular CLI (إذا لم يكن مثبتاً)
+npm install -g @angular/cli
+```
+
+---
+
+## 📁 هيكل المشروع
+
+```
+frontend/
+├── src/
+│   ├── app/
+│   │   ├── core/              # الخدمات والحراس الأساسية
+│   │   │   ├── services/      # API Services
+│   │   │   ├── guards/        # Route Guards
+│   │   │   ├── interceptors/  # HTTP Interceptors
+│   │   │   └── models/        # Interfaces & Types
+│   │   ├── shared/            # المكونات المشتركة
+│   │   │   ├── components/    # Reusable Components
+│   │   │   ├── directives/    # Custom Directives
+│   │   │   ├── pipes/         # Custom Pipes
+│   │   │   └── modules/       # Shared Modules
+│   │   ├── features/          # الوحدات الرئيسية
+│   │   │   ├── home/          # الصفحة الرئيسية
+│   │   │   ├── auth/          # المصادقة
+│   │   │   ├── auctions/      # المزادات
+│   │   │   ├── products/      # المنتجات
+│   │   │   ├── profile/       # الملف الشخصي
+│   │   │   ├── wallet/        # المحفظة
+│   │   │   ├── chat/          # الدردشة
+│   │   │   ├── notifications/ # الإشعارات
+│   │   │   └── admin/         # لوحة التحكم
+│   │   ├── layouts/           # تخطيطات الصفحات
+│   │   └── app.routes.ts      # التوجيهات
+│   ├── assets/                # الملفات الثابتة
+│   │   ├── images/
+│   │   ├── icons/
+│   │   └── fonts/
+│   ├── styles/                # الأنماط العامة
+│   │   ├── _variables.scss
+│   │   ├── _mixins.scss
+│   │   └── _themes.scss
+│   ├── environments/          # إعدادات البيئات
+│   └── index.html
+├── public/                    # الملفات العامة
+├── vercel.json               # إعدادات Vercel
+├── angular.json              # إعدادات Angular
+└── package.json
+```
+
+---
+
+## ▶️ تشغيل المشروع
+
+```bash
+# وضع التطوير
 ng serve
+# أو
+npm start
+
+# التطوير مع فتح المتصفح
+ng serve --open
+
+# تحديد البورت
+ng serve --port 4300
+
+# البناء للإنتاج
+ng build --configuration=production
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+بعد التشغيل، افتح المتصفح على:
 
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
+```
+http://localhost:4200
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+---
 
-```bash
-ng generate --help
+## 🔧 المتغيرات البيئية
+
+### Development (`environment.ts`)
+
+```typescript
+export const environment = {
+  production: false,
+  apiUrl: 'http://localhost:3000/api',
+  socketUrl: 'http://localhost:3000',
+};
 ```
 
-## Building
+### Production (`environment.prod.ts`)
 
-To build the project run:
-
-```bash
-ng build
+```typescript
+export const environment = {
+  production: true,
+  apiUrl: 'https://api.mazzadi.com/api',
+  socketUrl: 'https://api.mazzadi.com',
+};
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+---
 
-## Running unit tests
+## 🌐 النشر
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+### النشر على Vercel
+
+1. **اربط GitHub Repository بـ Vercel**
+2. **الملف `vercel.json` جاهز للاستخدام**
+3. **أضف المتغيرات البيئية**
 
 ```bash
+# النشر عبر CLI
+npm install -g vercel
+vercel --prod
+```
+
+### النشر اليدوي
+
+```bash
+# بناء المشروع
+ng build --configuration=production
+
+# الملفات في مجلد
+dist/frontend/browser/
+```
+
+---
+
+## 🧪 الاختبارات
+
+```bash
+# اختبارات الوحدات
 ng test
+
+# اختبارات E2E
+ng e2e
+
+# تغطية الاختبارات
+ng test --code-coverage
 ```
 
-## Running end-to-end tests
+---
 
-For end-to-end (e2e) testing, run:
+## 📱 دعم المتصفحات
+
+| المتصفح | الإصدار     |
+| ------- | ----------- |
+| Chrome  | آخر إصدارين |
+| Firefox | آخر إصدارين |
+| Safari  | آخر إصدارين |
+| Edge    | آخر إصدارين |
+
+---
+
+## 🤝 المساهمة
+
+نرحب بمساهماتكم! يرجى قراءة [دليل المساهمة](CONTRIBUTING.md) قبل البدء.
 
 ```bash
-ng e2e
+# 1. Fork المشروع
+# 2. إنشاء فرع جديد
+git checkout -b feature/amazing-feature
+
+# 3. Commit التغييرات
+git commit -m 'Add amazing feature'
+
+# 4. Push للفرع
+git push origin feature/amazing-feature
+
+# 5. فتح Pull Request
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+---
 
-## Additional Resources
+## 📞 التواصل والدعم
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- 📧 **البريد الإلكتروني**: support@mazzadi.com
+- 🌐 **الموقع**: [mazzadi.com](https://mazzadi.com)
+- 📱 **تويتر**: [@mazzadi](https://twitter.com/mazzadi)
+
+---
+
+## 📄 الرخصة
+
+هذا المشروع مرخص تحت رخصة **MIT** - راجع ملف [LICENSE](LICENSE) للتفاصيل.
+
+---
+
+<div align="center">
+
+**صنع بـ ❤️ في مصر 🇪🇬**
+
+⭐ إذا أعجبك المشروع، لا تنسى إضافة نجمة!
+
+</div>

@@ -1,12 +1,16 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { AuctionProduct, AuctionProductSchema } from '../schemas/auction-product.schema';
+import {
+  AuctionProduct,
+  AuctionProductSchema,
+} from '../schemas/auction-product.schema';
 import { User, UserSchema } from '../schemas/user.schema';
 import { Auction, AuctionSchema } from '../schemas/auction.schema';
 import { Product, ProductSchema } from '../schemas/product.schema';
 import { AuctionProductsController } from './auction-products.controller';
 import { AuctionProductsService } from './auction-products.service';
 import { AuctionsService } from '../auctions/auctions.service';
+import { ImageCompressionService } from '../image-compression.service';
 
 @Module({
   imports: [
@@ -18,7 +22,6 @@ import { AuctionsService } from '../auctions/auctions.service';
     ]),
   ],
   controllers: [AuctionProductsController],
-  providers: [AuctionProductsService, AuctionsService],
+  providers: [AuctionProductsService, AuctionsService, ImageCompressionService],
 })
 export class AuctionProductsModule {}
-

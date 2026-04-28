@@ -8,6 +8,7 @@ import { CartItem, CartItemSchema } from '../schemas/cart-item.schema';
 import { AuctionsController } from './auctions.controller';
 import { AuctionsService } from './auctions.service';
 import { ProductsService } from '../products/products.service';
+import { ImageCompressionService } from '../image-compression.service';
 
 @Module({
   imports: [
@@ -20,8 +21,7 @@ import { ProductsService } from '../products/products.service';
     ]),
   ],
   controllers: [AuctionsController],
-  providers: [AuctionsService, ProductsService],
+  providers: [AuctionsService, ProductsService, ImageCompressionService],
   exports: [AuctionsService],
 })
 export class AuctionsModule {}
-

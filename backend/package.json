@@ -8,7 +8,7 @@
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "nest start",
+    "start": "node dist/main.js",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
@@ -20,6 +20,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@nestjs/cache-manager": "^3.1.0",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
@@ -30,12 +31,18 @@
     "@nestjs/platform-socket.io": "^11.0.1",
     "@nestjs/throttler": "^6.5.0",
     "@nestjs/websockets": "^11.0.1",
+    "@types/compression": "^1.8.1",
     "@types/nodemailer": "^7.0.4",
     "bcrypt": "^6.0.0",
+    "cache-manager": "^7.2.8",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.3",
+    "cloudinary": "^1.41.3",
+    "compression": "^1.8.1",
     "dotenv": "^17.2.3",
+    "helmet": "^8.1.0",
     "mongoose": "^9.1.1",
+    "multer-storage-cloudinary": "^4.0.0",
     "nodemailer": "^7.0.12",
     "passport": "^0.7.0",
     "passport-facebook": "^3.0.0",
@@ -44,6 +51,7 @@
     "passport-twitter": "^1.0.4",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "sharp": "^0.34.5",
     "socket.io": "^4.7.4"
   },
   "devDependencies": {
@@ -92,5 +100,9 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
   }
 }

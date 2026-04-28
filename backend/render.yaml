@@ -1,0 +1,63 @@
+# Render.com Blueprint Specification
+# https://render.com/docs/blueprint-spec
+
+services:
+  # Backend API Service
+  - type: web
+    name: mazzadi-api
+    runtime: node
+    region: frankfurt # or oregon, singapore, ohio
+    plan: free # free, starter, standard, pro
+    branch: main
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:prod
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: MONGODB_URI
+        sync: false # Set manually in Render dashboard
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRATION
+        value: '7d'
+      - key: CORS_ORIGIN
+        sync: false # Set to your frontend URL
+    autoDeploy: true
+
+  # Optional: Background Worker (if needed)
+  # - type: worker
+  #   name: mazzadi-worker
+  #   runtime: node
+  #   buildCommand: npm install && npm run build
+  #   startCommand: npm run worker
+  #   envVars:
+  #     - key: NODE_ENV
+  #       value: production
+
+databases:
+  # MongoDB Atlas is recommended instead of Render's PostgreSQL
+  # Configure MongoDB Atlas separately and add connection string to envVars
+
+  # If you need PostgreSQL:
+  # - name: mazzadi-db
+  #   plan: free
+  #   databaseName: mazzadi
+  #   user: mazzadi_user
+
+# Static Site (if hosting frontend on Render too)
+# - type: web
+#   name: mazzadi-frontend
+#   runtime: static
+#   buildCommand: npm install && npm run build
+#   staticPublishPath: ./dist/frontend/browser
+#   headers:
+#     - path: /*
+#       name: Cache-Control
+#       value: public, max-age=0, must-revalidate
+#   routes:
+#     - type: rewrite
+#       source: /*
+#       destination: /index.html

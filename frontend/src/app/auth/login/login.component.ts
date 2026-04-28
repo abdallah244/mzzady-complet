@@ -1,4 +1,13 @@
-import { Component, signal, inject, OnInit, OnDestroy, computed, effect } from '@angular/core';
+import {
+  Component,
+  signal,
+  inject,
+  OnInit,
+  OnDestroy,
+  computed,
+  effect,
+  NgZone,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -7,6 +16,10 @@ import { AuthService } from '../auth.service';
 import { LoadingButtonDirective } from '../../shared/loading-button.directive';
 import { TranslationService } from '../../core/translation.service';
 import { environment } from '../../../environments/environment';
+import { loadGoogleSdk, loadFacebookSdk } from '../../core/social-auth-loader';
+
+declare const google: any;
+declare const FB: any;
 
 @Component({
   selector: 'app-login',
@@ -19,6 +32,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private router = inject(Router);
   private translationService = inject(TranslationService);
+  private ngZone = inject(NgZone);
   private subscriptions = new Subscription();
   private redirectInterval: any = null;
 
@@ -276,12 +290,105 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
   }
 
-  loginWithGoogle() {
-    window.location.href = `${environment.apiUrl}/auth/google`;
+  async loginWithGoogle() {
+    this.error.set(null);
+    this.isLoading.set(true);
+    try {
+      await loadGoogleSdk();
+      google.accounts.id.initialize({
+        client_id: environment.googleClientId,
+        callback: (response: any) => {
+          this.ngZone.run(() => {
+            this.handleGoogleCredential(response.credential);
+          });
+        },
+      });
+      google.accounts.id.prompt((notification: any) => {
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          // Fallback: show the One Tap popup as a button click
+          google.accounts.id.renderButton(document.createElement('div'), { type: 'standard' });
+          // Use popup mode instead
+          google.accounts.oauth2.initCodeClient({
+            client_id: environment.googleClientId,
+            scope: 'email profile',
+            callback: () => {},
+          });
+          // If One Tap is blocked, try the redirect flow
+          this.ngZone.run(() => {
+            this.isLoading.set(false);
+            // Fallback to popup
+            google.accounts.id.prompt();
+          });
+        }
+      });
+    } catch {
+      this.isLoading.set(false);
+      this.error.set('Google Sign-In is not available. Please try again.');
+    }
   }
 
-  loginWithFacebook() {
-    window.location.href = `${environment.apiUrl}/auth/facebook`;
+  private handleGoogleCredential(credential: string) {
+    this.isLoading.set(true);
+    this.error.set(null);
+    const sub = this.authService.googleSignIn(credential).subscribe({
+      next: () => {
+        this.isLoading.set(false);
+        this.currentStep.set(5); // Success step
+        this.startRedirectCountdown();
+      },
+      error: (err) => {
+        this.isLoading.set(false);
+        this.error.set(err.error?.message || 'Google sign-in failed');
+      },
+    });
+    this.subscriptions.add(sub);
+  }
+
+  async loginWithFacebook() {
+    this.error.set(null);
+    this.isLoading.set(true);
+    try {
+      await loadFacebookSdk();
+      FB.init({
+        appId: environment.facebookAppId,
+        cookie: true,
+        xfbml: false,
+        version: 'v18.0',
+      });
+      FB.login(
+        (response: any) => {
+          this.ngZone.run(() => {
+            if (response.authResponse) {
+              this.handleFacebookToken(response.authResponse.accessToken);
+            } else {
+              this.isLoading.set(false);
+              this.error.set('Facebook login was cancelled.');
+            }
+          });
+        },
+        { scope: 'email,public_profile' },
+      );
+    } catch {
+      this.isLoading.set(false);
+      this.error.set('Facebook Sign-In is not available. Please try again.');
+    }
+  }
+
+  private handleFacebookToken(accessToken: string) {
+    this.isLoading.set(true);
+    this.error.set(null);
+    const sub = this.authService.facebookSignIn(accessToken).subscribe({
+      next: () => {
+        this.isLoading.set(false);
+        this.currentStep.set(5);
+        this.startRedirectCountdown();
+      },
+      error: (err) => {
+        this.isLoading.set(false);
+        this.error.set(err.error?.message || 'Facebook sign-in failed');
+      },
+    });
+    this.subscriptions.add(sub);
   }
 
   onSubmit() {

@@ -14,8 +14,10 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ProductsService } from './products.service';
 import { AdminGuard } from '../auth/admin.guard';
-import { diskStorage } from 'multer';
+import { ImageCompressionService } from '../image-compression.service';
+import { storage } from '../cloudinary.config';
 import { extname } from 'path';
+import { existsSync, mkdirSync } from 'fs';
 
 interface MulterFile {
   fieldname: string;
@@ -31,25 +33,22 @@ interface MulterFile {
 
 @Controller('products')
 export class ProductsController {
-  constructor(private readonly productsService: ProductsService) {}
+  constructor(
+    private readonly productsService: ProductsService,
+    private readonly imageCompression: ImageCompressionService,
+  ) {}
 
   @Post()
   @UseGuards(AdminGuard)
   @UseInterceptors(
     FileInterceptor('image', {
-      storage: diskStorage({
-        destination: './uploads/products',
-        filename: (req, file, cb) => {
-          const randomName = Array(32)
-            .fill(null)
-            .map(() => Math.round(Math.random() * 16).toString(16))
-            .join('');
-          cb(null, `${randomName}${extname(file.originalname)}`);
-        },
-      }),
+      storage: storage,
       fileFilter: (req, file, cb) => {
         if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
-          return cb(new BadRequestException('Only image files are allowed!'), false);
+          return cb(
+            new BadRequestException('Only image files are allowed!'),
+            false,
+          );
         }
         cb(null, true);
       },
@@ -62,8 +61,12 @@ export class ProductsController {
     if (!file) {
       throw new BadRequestException('Product image is required');
     }
-    const imageUrl = `/uploads/products/${file.filename}`;
-    const imageFilename = file.filename;
+
+    // Compress product image and store in MongoDB
+    const imageUrl = await this.imageCompression.compressAndStoreProduct(
+      file.path,
+    );
+    const imageFilename = imageUrl;
     return this.productsService.createProduct(
       body.productName,
       parseFloat(body.price),

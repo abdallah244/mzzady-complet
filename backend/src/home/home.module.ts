@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { HomeController } from './home.controller';
 import { HomeService } from './home.service';
 import { HomeImage, HomeImageSchema } from '../schemas/home-image.schema';
+import { ImageCompressionService } from '../image-compression.service';
 
 @Module({
   imports: [
@@ -11,8 +12,7 @@ import { HomeImage, HomeImageSchema } from '../schemas/home-image.schema';
     ]),
   ],
   controllers: [HomeController],
-  providers: [HomeService],
+  providers: [HomeService, ImageCompressionService],
   exports: [HomeService],
 })
 export class HomeModule {}
-

@@ -120,6 +120,7 @@ export class AuthService {
       nationalIdFrontFilename: nationalIdImages.frontFilename,
       nationalIdBackUrl: nationalIdImages.backUrl,
       nationalIdBackFilename: nationalIdImages.backFilename,
+      walletBalance: 80000, // Welcome bonus
     });
 
     await user.save();
@@ -319,17 +320,236 @@ export class AuthService {
       throw new BadRequestException('Invalid verification code');
     }
 
-    // Mark as verified and then delete the code (no longer needed)
+    // ✅ Mark as verified
     verification.verified = true;
+
+    // ✅ Delete after 10 minutes from successful verification
+    verification.deleteAt = new Date(Date.now() + 10 * 60 * 1000);
+
     await verification.save();
 
-    // Delete the verification code after successful verification
-    // This prevents code reuse and cleans up the database
-    await this.emailVerificationModel.deleteOne({ email });
-
-    this.logger.log(`Email verified and code deleted for: ${email}`);
+    this.logger.log(
+      `Email verified. Code will be deleted after 10 minutes for: ${email}`,
+    );
 
     return { message: 'Email verified successfully', verified: true };
+  }
+
+  async googleSignIn(credential: string): Promise<any> {
+    try {
+      // Verify the Google ID token
+      const ticket = await fetch(
+        `https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`,
+      );
+      const payload = await ticket.json();
+
+      if (payload.error) {
+        throw new BadRequestException('Invalid Google token');
+      }
+
+      // Verify the audience matches our client ID
+      const clientId = process.env.GOOGLE_CLIENT_ID;
+      if (payload.aud !== clientId) {
+        throw new BadRequestException('Token was not issued for this app');
+      }
+
+      const {
+        email,
+        given_name,
+        family_name,
+        sub: googleId,
+        picture,
+      } = payload;
+
+      if (!email) {
+        throw new BadRequestException('Google account has no email');
+      }
+
+      // Check if user already exists
+      let user = await this.userModel.findOne({ email });
+
+      if (user) {
+        // Existing user - update OAuth info if needed
+        if (!user.oauthId) {
+          user.oauthId = googleId;
+          user.authProvider = 'google';
+        }
+        user.isOnline = true;
+        user.lastActivity = new Date();
+        user.visitsThisMonth = (user.visitsThisMonth || 0) + 1;
+        await user.save();
+      } else {
+        // New user - create account
+        const baseNickname = (email.split('@')[0] || 'user')
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, '');
+        let nickname = baseNickname;
+        let counter = 1;
+        while (await this.userModel.findOne({ nickname })) {
+          nickname = `${baseNickname}${counter}`;
+          counter++;
+          if (counter > 100) {
+            nickname = `${baseNickname}${Date.now()}`;
+            break;
+          }
+        }
+
+        user = new this.userModel({
+          email,
+          password: '',
+          firstName: given_name || 'User',
+          middleName: '',
+          lastName: family_name || '',
+          nickname,
+          phone: undefined,
+          nationalId: undefined,
+          authProvider: 'google',
+          oauthId: googleId,
+          isProfileComplete: false,
+          profileImageUrl: picture || '',
+          walletBalance: 80000, // Welcome bonus
+        });
+
+        await user.save();
+        this.logger.log(`New Google user created: ${email}`);
+      }
+
+      // Generate JWT tokens
+      const tokens = this.generateTokens(user);
+
+      return {
+        message: 'Google sign-in successful',
+        ...tokens,
+        user: {
+          id: user._id.toString(),
+          email: user.email,
+          firstName: user.firstName,
+          middleName: user.middleName,
+          lastName: user.lastName,
+          nickname: user.nickname,
+          phone: user.phone,
+          isProfileComplete: user.isProfileComplete,
+          profileImageUrl: user.profileImageUrl,
+        },
+      };
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      this.logger.error('Google sign-in failed', error);
+      throw new BadRequestException(
+        `Google sign-in failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    }
+  }
+
+  async facebookSignIn(accessToken: string): Promise<any> {
+    try {
+      // Verify the access token with Facebook and get user info
+      const response = await fetch(
+        `https://graph.facebook.com/me?fields=id,name,email,first_name,last_name,picture.type(large)&access_token=${accessToken}`,
+      );
+      const fbUser = await response.json();
+
+      if (fbUser.error) {
+        throw new BadRequestException(
+          `Facebook token error: ${fbUser.error.message}`,
+        );
+      }
+
+      // Verify the token belongs to our app
+      const debugResponse = await fetch(
+        `https://graph.facebook.com/debug_token?input_token=${accessToken}&access_token=${process.env.FACEBOOK_APP_ID}|${process.env.FACEBOOK_APP_SECRET}`,
+      );
+      const debugData = await debugResponse.json();
+
+      if (!debugData.data?.is_valid) {
+        throw new BadRequestException('Invalid Facebook access token');
+      }
+
+      const email = fbUser.email;
+      if (!email) {
+        throw new BadRequestException(
+          'Facebook account has no email. Please allow email permission.',
+        );
+      }
+
+      // Check if user already exists
+      let user = await this.userModel.findOne({ email });
+
+      if (user) {
+        if (!user.oauthId) {
+          user.oauthId = fbUser.id;
+          user.authProvider = 'facebook';
+        }
+        user.isOnline = true;
+        user.lastActivity = new Date();
+        user.visitsThisMonth = (user.visitsThisMonth || 0) + 1;
+        await user.save();
+      } else {
+        // New user
+        const baseNickname = (email.split('@')[0] || 'user')
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, '');
+        let nickname = baseNickname;
+        let counter = 1;
+        while (await this.userModel.findOne({ nickname })) {
+          nickname = `${baseNickname}${counter}`;
+          counter++;
+          if (counter > 100) {
+            nickname = `${baseNickname}${Date.now()}`;
+            break;
+          }
+        }
+
+        const pictureUrl = fbUser.picture?.data?.url || '';
+
+        user = new this.userModel({
+          email,
+          password: '',
+          firstName: fbUser.first_name || 'User',
+          middleName: '',
+          lastName: fbUser.last_name || '',
+          nickname,
+          phone: undefined,
+          nationalId: undefined,
+          authProvider: 'facebook',
+          oauthId: fbUser.id,
+          isProfileComplete: false,
+          profileImageUrl: pictureUrl,
+          walletBalance: 80000, // Welcome bonus
+        });
+
+        await user.save();
+        this.logger.log(`New Facebook user created: ${email}`);
+      }
+
+      const tokens = this.generateTokens(user);
+
+      return {
+        message: 'Facebook sign-in successful',
+        ...tokens,
+        user: {
+          id: user._id.toString(),
+          email: user.email,
+          firstName: user.firstName,
+          middleName: user.middleName,
+          lastName: user.lastName,
+          nickname: user.nickname,
+          phone: user.phone,
+          isProfileComplete: user.isProfileComplete,
+          profileImageUrl: user.profileImageUrl,
+        },
+      };
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      this.logger.error('Facebook sign-in failed', error);
+      throw new BadRequestException(
+        `Facebook sign-in failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    }
   }
 
   async handleOAuthCallback(
@@ -557,10 +777,11 @@ export class AuthService {
         middleName,
         lastName,
         nickname,
-        phone: '', // OAuth users might not have phone - will be asked to complete profile
-        nationalId: '', // OAuth users need to complete profile
+        phone: undefined, // OAuth users might not have phone - will be asked to complete profile
+        nationalId: undefined, // OAuth users need to complete profile
         authProvider: provider,
         isProfileComplete: false, // Mark as incomplete for OAuth users
+        walletBalance: 80000, // Welcome bonus
       });
 
       await user.save();
@@ -631,6 +852,10 @@ export class AuthService {
       nationalIdFrontUrl: user.nationalIdFrontUrl,
       nationalIdBackUrl: user.nationalIdBackUrl,
       walletBalance: user.walletBalance || 0,
+      authProvider: user.authProvider || 'local',
+      isProfileComplete: user.isProfileComplete,
+      nicknameChanged: user.nicknameChanged || false,
+      emailVerified: user.emailVerified || false,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };
@@ -643,6 +868,8 @@ export class AuthService {
       middleName?: string;
       lastName?: string;
       phone?: string;
+      nickname?: string;
+      nationalId?: string;
     },
   ): Promise<any> {
     const user = await this.userModel.findById(userId);
@@ -653,7 +880,7 @@ export class AuthService {
     if (updates.firstName) {
       user.firstName = updates.firstName;
     }
-    if (updates.middleName) {
+    if (updates.middleName !== undefined) {
       user.middleName = updates.middleName;
     }
     if (updates.lastName) {
@@ -669,6 +896,53 @@ export class AuthService {
         throw new ConflictException('Phone number already in use');
       }
       user.phone = updates.phone;
+    }
+
+    // Allow one-time nickname change for OAuth users
+    if (updates.nickname && updates.nickname !== user.nickname) {
+      if (user.nicknameChanged) {
+        throw new BadRequestException('Nickname can only be changed once');
+      }
+      const existingNickname = await this.userModel.findOne({
+        nickname: updates.nickname,
+        _id: { $ne: userId },
+      });
+      if (existingNickname) {
+        throw new ConflictException('Nickname already in use');
+      }
+      user.nickname = updates.nickname;
+      user.nicknameChanged = true;
+    }
+
+    // Allow OAuth users to add national ID
+    if (updates.nationalId && !user.nationalId) {
+      const normalizedNationalId = updates.nationalId
+        .replace(/\s+/g, '')
+        .replace(/-/g, '');
+      const egyptianNationalIdRegex = /^[23]\d{13}$/;
+      if (!egyptianNationalIdRegex.test(normalizedNationalId)) {
+        throw new BadRequestException('Invalid Egyptian National ID format');
+      }
+      const existingNationalId = await this.userModel.findOne({
+        nationalId: normalizedNationalId,
+        _id: { $ne: userId },
+      });
+      if (existingNationalId) {
+        throw new ConflictException('National ID already in use');
+      }
+      user.nationalId = normalizedNationalId;
+    }
+
+    // Check if profile is now complete
+    if (user.authProvider !== 'local' && !user.isProfileComplete) {
+      if (
+        user.phone &&
+        user.nationalId &&
+        user.nationalIdFrontUrl &&
+        user.nationalIdBackUrl
+      ) {
+        user.isProfileComplete = true;
+      }
     }
 
     await user.save();
@@ -703,5 +977,77 @@ export class AuthService {
     await user.save();
 
     return this.getProfile(userId);
+  }
+
+  async uploadNationalIdImages(
+    userId: string,
+    images: {
+      frontUrl: string;
+      backUrl: string;
+      frontFilename: string;
+      backFilename: string;
+    },
+  ): Promise<any> {
+    const user = await this.userModel.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    // Only allow if no national ID images exist yet (one-time upload)
+    if (user.nationalIdFrontUrl || user.nationalIdBackUrl) {
+      throw new BadRequestException('National ID images already uploaded');
+    }
+
+    user.nationalIdFrontUrl = images.frontUrl;
+    user.nationalIdFrontFilename = images.frontFilename;
+    user.nationalIdBackUrl = images.backUrl;
+    user.nationalIdBackFilename = images.backFilename;
+
+    // Check if profile is now complete
+    if (user.authProvider !== 'local' && !user.isProfileComplete) {
+      if (
+        user.phone &&
+        user.nationalId &&
+        user.nationalIdFrontUrl &&
+        user.nationalIdBackUrl
+      ) {
+        user.isProfileComplete = true;
+      }
+    }
+
+    await user.save();
+    return this.getProfile(userId);
+  }
+
+  async markEmailVerified(userId: string): Promise<any> {
+    const user = await this.userModel.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    if (user.emailVerified) {
+      throw new BadRequestException('Email already verified');
+    }
+
+    // Send verification code
+    await this.sendVerificationCode(user.email, true);
+
+    return { message: 'Verification code sent to email' };
+  }
+
+  async confirmEmailVerification(userId: string, code: string): Promise<any> {
+    const user = await this.userModel.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const result = await this.verifyEmailCode(user.email, code);
+
+    if (result.verified) {
+      user.emailVerified = true;
+      await user.save();
+    }
+
+    return { ...result, emailVerified: true };
   }
 }

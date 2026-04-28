@@ -13,8 +13,9 @@ import {
   Req,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
+import { storage } from '../cloudinary.config';
 import { extname } from 'path';
+import { existsSync, mkdirSync } from 'fs';
 import { JobApplicationService } from './job-applications.service';
 import { AdminGuard } from '../auth/admin.guard';
 
@@ -25,14 +26,7 @@ export class JobApplicationController {
   @Post()
   @UseInterceptors(
     FileInterceptor('cvFile', {
-      storage: diskStorage({
-        destination: './uploads/cvs',
-        filename: (req, file, cb) => {
-          const uniqueSuffix =
-            Date.now() + '-' + Math.round(Math.random() * 1e9);
-          cb(null, `cv-${uniqueSuffix}${extname(file.originalname)}`);
-        },
-      }),
+      storage: storage,
       fileFilter: (req, file, cb) => {
         if (file.mimetype === 'application/pdf') {
           cb(null, true);

@@ -13,28 +13,24 @@ import {
   Req,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
+import { storage } from '../cloudinary.config';
 import { extname } from 'path';
+import { existsSync, mkdirSync } from 'fs';
 import { AuctionProductsService } from './auction-products.service';
 import { AdminGuard } from '../auth/admin.guard';
+import { ImageCompressionService } from '../image-compression.service';
 
 @Controller('auction-products')
 export class AuctionProductsController {
   constructor(
     private readonly auctionProductsService: AuctionProductsService,
+    private readonly imageCompression: ImageCompressionService,
   ) {}
 
   @Post()
   @UseInterceptors(
     FilesInterceptor('images', 10, {
-      storage: diskStorage({
-        destination: './uploads/auction-products',
-        filename: (req, file, cb) => {
-          const uniqueSuffix =
-            Date.now() + '-' + Math.round(Math.random() * 1e9);
-          cb(null, `product-${uniqueSuffix}${extname(file.originalname)}`);
-        },
-      }),
+      storage: storage,
       fileFilter: (req, file, cb) => {
         if (file.mimetype.startsWith('image/')) {
           cb(null, true);
@@ -85,15 +81,18 @@ export class AuctionProductsController {
     const mainImage = files[0];
     const additionalImages = files.slice(1);
 
-    const mainImageUrl = `/uploads/auction-products/${mainImage.filename}`;
-    const mainImageFilename = mainImage.filename;
+    // Compress and store all images in MongoDB
+    const mainImageUrl = await this.imageCompression.compressAndStoreProduct(
+      mainImage.path,
+    );
+    const additionalImagesUrl =
+      await this.imageCompression.compressAndStoreMultiple(
+        additionalImages.map((img) => img.path),
+        { maxWidth: 1200, maxHeight: 1200, quality: 75 },
+      );
 
-    const additionalImagesUrl = additionalImages.map(
-      (img) => `/uploads/auction-products/${img.filename}`,
-    );
-    const additionalImagesFilename = additionalImages.map(
-      (img) => img.filename,
-    );
+    const mainImageFilename = mainImageUrl;
+    const additionalImagesFilename = additionalImagesUrl;
 
     const minBidIncrement = body.minBidIncrement
       ? parseFloat(body.minBidIncrement.toString())

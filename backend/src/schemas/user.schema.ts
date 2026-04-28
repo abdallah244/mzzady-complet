@@ -70,6 +70,14 @@ export class User {
   @Prop({ default: false })
   isProfileComplete: boolean;
 
+  // Track if nickname was changed (one-time edit for OAuth users)
+  @Prop({ default: false })
+  nicknameChanged: boolean;
+
+  // Track if email was verified (for OAuth users to verify once)
+  @Prop({ default: false })
+  emailVerified: boolean;
+
   createdAt?: Date;
   updatedAt?: Date;
 }

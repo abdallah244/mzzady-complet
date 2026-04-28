@@ -180,7 +180,8 @@ export class HomeComponent implements OnInit, OnDestroy {
   onHowItWorksVisible() {
     if (!this.howItWorksVisible()) {
       this.howItWorksVisible.set(true);
-      // Content already loaded, just show it
+      // Load how-it-works images only when scrolled to
+      this.loadHowItWorksImages();
       this.howItWorksLoading.set(false);
     }
   }
@@ -217,18 +218,13 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   loadImages() {
-    // Load Hero images with timeout for faster fallback
+    // Load Hero images with reasonable timeout for Heroku cold starts
     const timeout = setTimeout(() => {
-      // Fallback if request takes too long
       if (this.heroLoading()) {
-        this.heroImages.set([
-          'https://via.placeholder.com/1920x1080/1a1a1a/d4af37?text=Mazzady+1',
-          'https://via.placeholder.com/1920x1080/1a1a1a/d4af37?text=Mazzady+2',
-          'https://via.placeholder.com/1920x1080/1a1a1a/d4af37?text=Mazzady+3',
-        ]);
+        this.heroImages.set([]);
         this.heroLoading.set(false);
       }
-    }, 2000);
+    }, 8000);
 
     this.http
       .get<{ success: boolean; images: any[] }>(`${environment.apiUrl}/home/images/hero`)
@@ -236,14 +232,20 @@ export class HomeComponent implements OnInit, OnDestroy {
         next: (response) => {
           clearTimeout(timeout);
           if (response.success && response.images.length > 0) {
-            this.heroImages.set(response.images.map((img) => `${environment.apiUrl}${img.url}`));
+            const imageUrls = response.images.map((img) => `${environment.apiUrl}${img.url}`);
+            this.heroImages.set(imageUrls);
+            // Preload the first hero image for faster LCP
+            if (imageUrls[0]) {
+              const link = document.createElement('link');
+              link.rel = 'preload';
+              link.as = 'image';
+              link.href = imageUrls[0];
+              link.fetchPriority = 'high';
+              document.head.appendChild(link);
+            }
           } else {
-            // Fallback to placeholder images if no images found
-            this.heroImages.set([
-              'https://via.placeholder.com/1920x1080/1a1a1a/d4af37?text=Mazzady+1',
-              'https://via.placeholder.com/1920x1080/1a1a1a/d4af37?text=Mazzady+2',
-              'https://via.placeholder.com/1920x1080/1a1a1a/d4af37?text=Mazzady+3',
-            ]);
+            // No images from API - show gradient hero
+            this.heroImages.set([]);
           }
           this.heroLoading.set(false);
         },
@@ -259,7 +261,10 @@ export class HomeComponent implements OnInit, OnDestroy {
         },
       });
 
-    // Load How It Works images
+    // Load How It Works images only when section is visible (deferred)
+  }
+
+  loadHowItWorksImages() {
     this.http
       .get<{ success: boolean; images: any[] }>(`${environment.apiUrl}/home/images/howItWorks`)
       .subscribe({

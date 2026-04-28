@@ -44,11 +44,11 @@ export class AuctionsService {
       throw new NotFoundException('Seller not found');
     }
 
-    // Validate duration (1 second to 7 days)
-    const maxDuration = 7 * 24 * 60 * 60; // 7 days in seconds
+    // Validate duration (1 second to 90 days)
+    const maxDuration = 90 * 24 * 60 * 60; // 90 days in seconds
     if (durationInSeconds < 1 || durationInSeconds > maxDuration) {
       throw new BadRequestException(
-        'Duration must be between 1 second and 7 days',
+        'Duration must be between 1 second and 90 days',
       );
     }
 
@@ -318,7 +318,9 @@ export class AuctionsService {
 
         // Ensure products directory exists
         if (!fs.existsSync(productsDir)) {
-          fs.mkdirSync(productsDir, { recursive: true });
+          if (!process.env.VERCEL) {
+            fs.mkdirSync(productsDir, { recursive: true });
+          }
         }
 
         // Copy main image

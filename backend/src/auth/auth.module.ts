@@ -13,6 +13,7 @@ import {
   EmailVerification,
   EmailVerificationSchema,
 } from '../schemas/email-verification.schema';
+import { ImageCompressionService } from '../image-compression.service';
 
 @Module({
   imports: [
@@ -35,7 +36,13 @@ import {
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, EmailService, JwtStrategy, JwtAuthGuard],
+  providers: [
+    AuthService,
+    EmailService,
+    JwtStrategy,
+    JwtAuthGuard,
+    ImageCompressionService,
+  ],
   exports: [AuthService, JwtModule, PassportModule, JwtAuthGuard],
 })
 export class AuthModule {}

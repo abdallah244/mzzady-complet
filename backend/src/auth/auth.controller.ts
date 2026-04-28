@@ -20,13 +20,14 @@ import {
   FileInterceptor,
   FileFieldsInterceptor,
 } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
+import { storage } from '../cloudinary.config';
 import { extname } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import type { Request, Response } from 'express';
 import { Throttle, SkipThrottle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { ImageCompressionService } from '../image-compression.service';
 import { Public } from './public.decorator';
 import {
   RegisterDto,
@@ -35,11 +36,16 @@ import {
   VerifyEmailCodeDto,
   VerifyOAuthCodeDto,
   RefreshTokenDto,
+  GoogleSignInDto,
+  FacebookSignInDto,
 } from './dto/auth.dto';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly imageCompression: ImageCompressionService,
+  ) {}
 
   @Post('register')
   @UseInterceptors(
@@ -49,21 +55,7 @@ export class AuthController {
         { name: 'nationalIdBack', maxCount: 1 },
       ],
       {
-        storage: diskStorage({
-          destination: (req, file, cb) => {
-            const uploadPath = './uploads/national-ids';
-            if (!existsSync(uploadPath)) {
-              mkdirSync(uploadPath, { recursive: true });
-            }
-            cb(null, uploadPath);
-          },
-          filename: (req, file, cb) => {
-            const uniqueSuffix =
-              Date.now() + '-' + Math.round(Math.random() * 1e9);
-            const ext = extname(file.originalname);
-            cb(null, `nid-${uniqueSuffix}${ext}`);
-          },
-        }),
+        storage: storage,
         fileFilter: (req, file, cb) => {
           if (file.mimetype.startsWith('image/')) {
             cb(null, true);
@@ -109,8 +101,13 @@ export class AuthController {
       );
     }
 
-    const frontUrl = `/uploads/national-ids/${frontFile.filename}`;
-    const backUrl = `/uploads/national-ids/${backFile.filename}`;
+    // Compress national ID images and store in MongoDB
+    const frontUrl = await this.imageCompression.compressAndStoreNationalId(
+      frontFile.path,
+    );
+    const backUrl = await this.imageCompression.compressAndStoreNationalId(
+      backFile.path,
+    );
 
     return this.authService.register(
       registerDto.email,
@@ -124,8 +121,8 @@ export class AuthController {
       {
         frontUrl,
         backUrl,
-        frontFilename: frontFile.filename,
-        backFilename: backFile.filename,
+        frontFilename: frontUrl,
+        backFilename: backUrl,
       },
     );
   }
@@ -189,23 +186,100 @@ export class AuthController {
       middleName?: string;
       lastName?: string;
       phone?: string;
+      nickname?: string;
+      nationalId?: string;
     },
   ) {
     return this.authService.updateProfile(userId, body);
   }
 
+  @Post('profile/:userId/national-id')
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'nationalIdFront', maxCount: 1 },
+        { name: 'nationalIdBack', maxCount: 1 },
+      ],
+      {
+        storage: storage,
+        fileFilter: (req, file, cb) => {
+          if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+          } else {
+            cb(
+              new BadRequestException(
+                'Only image files are allowed for national ID',
+              ) as unknown as Error,
+              false,
+            );
+          }
+        },
+        limits: {
+          fileSize: 2 * 1024 * 1024,
+        },
+      },
+    ),
+  )
+  async uploadNationalId(
+    @Param('userId') userId: string,
+    @UploadedFiles()
+    files: {
+      nationalIdFront?: Array<{
+        filename: string;
+        path: string;
+        mimetype: string;
+        size: number;
+      }>;
+      nationalIdBack?: Array<{
+        filename: string;
+        path: string;
+        mimetype: string;
+        size: number;
+      }>;
+    },
+  ) {
+    const frontFile = files?.nationalIdFront?.[0];
+    const backFile = files?.nationalIdBack?.[0];
+
+    if (!frontFile || !backFile) {
+      throw new BadRequestException(
+        'Front and back national ID images are required',
+      );
+    }
+
+    // Compress national ID images and store in MongoDB
+    const frontUrl = await this.imageCompression.compressAndStoreNationalId(
+      frontFile.path,
+    );
+    const backUrl = await this.imageCompression.compressAndStoreNationalId(
+      backFile.path,
+    );
+
+    return this.authService.uploadNationalIdImages(userId, {
+      frontUrl,
+      backUrl,
+      frontFilename: frontUrl,
+      backFilename: backUrl,
+    });
+  }
+
+  @Post('profile/:userId/verify-email')
+  async verifyProfileEmail(@Param('userId') userId: string) {
+    return this.authService.markEmailVerified(userId);
+  }
+
+  @Post('profile/:userId/confirm-email')
+  async confirmProfileEmail(
+    @Param('userId') userId: string,
+    @Body() body: { code: string },
+  ) {
+    return this.authService.confirmEmailVerification(userId, body.code);
+  }
+
   @Post('profile/:userId/avatar')
   @UseInterceptors(
     FileInterceptor('avatar', {
-      storage: diskStorage({
-        destination: './uploads/profiles',
-        filename: (req, file, cb) => {
-          const uniqueSuffix =
-            Date.now() + '-' + Math.round(Math.random() * 1e9);
-          const ext = extname(file.originalname);
-          cb(null, `profile-${uniqueSuffix}${ext}`);
-        },
-      }),
+      storage: storage,
       fileFilter: (req, file, cb) => {
         if (file.mimetype.startsWith('image/')) {
           cb(null, true);
@@ -225,13 +299,12 @@ export class AuthController {
     if (!file) {
       throw new BadRequestException('Avatar image is required');
     }
-    const avatarUrl = `/uploads/profiles/${file.filename}`;
-    const avatarFilename = file.filename;
-    return this.authService.updateProfileAvatar(
-      userId,
-      avatarUrl,
-      avatarFilename,
+
+    // Compress avatar and store in MongoDB
+    const avatarUrl = await this.imageCompression.compressAndStoreAvatar(
+      file.path,
     );
+    return this.authService.updateProfileAvatar(userId, avatarUrl, avatarUrl);
   }
 
   @Post('send-verification-code')
@@ -283,6 +356,16 @@ export class AuthController {
         `Failed to verify OAuth code: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );
     }
+  }
+
+  @Post('google-signin')
+  async googleSignIn(@Body() body: GoogleSignInDto) {
+    return this.authService.googleSignIn(body.credential);
+  }
+
+  @Post('facebook-signin')
+  async facebookSignIn(@Body() body: FacebookSignInDto) {
+    return this.authService.facebookSignIn(body.accessToken);
   }
 
   @Get('google')

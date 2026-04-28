@@ -1,5 +1,13 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+
+// Sanitize environment variables (remove trailing \r\n from Vercel config pastes)
+for (const key in process.env) {
+  if (typeof process.env[key] === 'string') {
+    process.env[key] = process.env[key]?.replace(/\r|\n/g, '').trim();
+  }
+}
+
 import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe, Logger } from '@nestjs/common';
@@ -28,7 +36,9 @@ function ensureUploadDirs() {
   ];
   for (const dir of dirs) {
     if (!existsSync(dir)) {
-      mkdirSync(dir, { recursive: true });
+      if (!process.env.VERCEL) {
+        mkdirSync(dir, { recursive: true });
+      }
       logger.log(`Created upload directory: ${dir}`);
     }
   }
@@ -139,63 +149,64 @@ async function bootstrap() {
       const port = process.env.PORT ?? 3000;
       await app.listen(port);
       logger.log(`Application running on port ${port}`);
+
+      // One-time migration: fix OAuth users with empty string phone/nationalId
+      try {
+        const connection = app.get(getConnectionToken());
+        const usersCol = connection.collection('users');
+        const r1 = await usersCol.updateMany(
+          { phone: '' },
+          { $unset: { phone: 1 } },
+        );
+        const r2 = await usersCol.updateMany(
+          { nationalId: '' },
+          { $unset: { nationalId: 1 } },
+        );
+        if (r1.modifiedCount || r2.modifiedCount) {
+          logger.log(
+            `Migration: fixed ${r1.modifiedCount} empty phones, ${r2.modifiedCount} empty nationalIds`,
+          );
+        }
+        // Drop and recreate phone index as sparse+unique to be safe
+        try {
+          await usersCol.dropIndex('phone_1');
+          await usersCol.createIndex(
+            { phone: 1 },
+            { unique: true, sparse: true },
+          );
+          logger.log('Recreated phone_1 index as sparse+unique');
+        } catch {
+          /* index may not exist */
+        }
+        try {
+          await usersCol.dropIndex('nationalId_1');
+          await usersCol.createIndex(
+            { nationalId: 1 },
+            { unique: true, sparse: true },
+          );
+          logger.log('Recreated nationalId_1 index as sparse+unique');
+        } catch {
+          /* index may not exist */
+        }
+      } catch (e) {
+        logger.warn('Migration skipped: ' + (e as Error).message);
+      }
+
+      // Schedule auction status updates every minute
+      const auctionsService = app.get(AuctionsService);
+      setInterval(async () => {
+        try {
+          await auctionsService.updateAuctionStatus();
+        } catch (error) {
+          // Silently handle error - auction status update is non-critical
+        }
+      }, 60000); // Every minute
     } else {
       await app.init();
       cachedApp = app.getHttpAdapter().getInstance();
     }
     logger.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-
-    // One-time migration: fix OAuth users with empty string phone/nationalId
-    try {
-      const connection = app.get(getConnectionToken());
-      const usersCol = connection.collection('users');
-      const r1 = await usersCol.updateMany(
-        { phone: '' },
-        { $unset: { phone: 1 } },
-      );
-      const r2 = await usersCol.updateMany(
-        { nationalId: '' },
-        { $unset: { nationalId: 1 } },
-      );
-      if (r1.modifiedCount || r2.modifiedCount) {
-        logger.log(
-          `Migration: fixed ${r1.modifiedCount} empty phones, ${r2.modifiedCount} empty nationalIds`,
-        );
-      }
-      // Drop and recreate phone index as sparse+unique to be safe
-      try {
-        await usersCol.dropIndex('phone_1');
-        await usersCol.createIndex(
-          { phone: 1 },
-          { unique: true, sparse: true },
-        );
-        logger.log('Recreated phone_1 index as sparse+unique');
-      } catch {
-        /* index may not exist */
-      }
-      try {
-        await usersCol.dropIndex('nationalId_1');
-        await usersCol.createIndex(
-          { nationalId: 1 },
-          { unique: true, sparse: true },
-        );
-        logger.log('Recreated nationalId_1 index as sparse+unique');
-      } catch {
-        /* index may not exist */
-      }
-    } catch (e) {
-      logger.warn('Migration skipped: ' + (e as Error).message);
-    }
-
-    // Schedule auction status updates every minute
-    const auctionsService = app.get(AuctionsService);
-    setInterval(async () => {
-      try {
-        await auctionsService.updateAuctionStatus();
-      } catch (error) {
-        // Silently handle error - auction status update is non-critical
-      }
-    }, 60000); // Every minute
+    if (process.env.VERCEL) return cachedApp;
   } catch (error) {
     logger.error('Failed to start application', error);
     if (!process.env.VERCEL) {
@@ -215,6 +226,8 @@ export default async (req: any, res: any) => {
     return appInstance(req, res);
   } catch (err: any) {
     console.error('VERCEL CRASH ERROR:', err);
-    res.status(500).send(`Server Error: ${err.message || String(err)}\nStack: ${err.stack}`);
+    res
+      .status(500)
+      .send(`Server Error: ${err.message || String(err)}\nStack: ${err.stack}`);
   }
 };

@@ -1,4 +1,4 @@
-import { Component, signal, inject, computed, OnInit, OnDestroy } from '@angular/core';
+import { Component, signal, inject, computed, OnInit, OnDestroy, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -13,6 +13,10 @@ import { AuthService } from '../auth.service';
 import { LoadingButtonDirective } from '../../shared/loading-button.directive';
 import { TranslationService } from '../../core/translation.service';
 import { environment } from '../../../environments/environment';
+import { loadGoogleSdk, loadFacebookSdk } from '../../core/social-auth-loader';
+
+declare const google: any;
+declare const FB: any;
 
 type PasswordStrength = 'weak' | 'medium' | 'strong';
 
@@ -27,6 +31,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private router = inject(Router);
   private translationService = inject(TranslationService);
+  private ngZone = inject(NgZone);
   private subscriptions = new Subscription();
   private codeExpiryTimer: any = null;
   private resendCooldownTimer: any = null;
@@ -661,12 +666,92 @@ export class RegisterComponent implements OnInit, OnDestroy {
     this.router.navigate(['/login']);
   }
 
-  registerWithGoogle() {
-    window.location.href = `${environment.apiUrl}/auth/google`;
+  async registerWithGoogle() {
+    this.error.set(null);
+    this.isLoading.set(true);
+    try {
+      await loadGoogleSdk();
+      google.accounts.id.initialize({
+        client_id: environment.googleClientId,
+        callback: (response: any) => {
+          this.ngZone.run(() => {
+            this.handleGoogleCredential(response.credential);
+          });
+        },
+      });
+      google.accounts.id.prompt((notification: any) => {
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          this.ngZone.run(() => {
+            this.isLoading.set(false);
+          });
+        }
+      });
+    } catch {
+      this.isLoading.set(false);
+      this.error.set('Google Sign-In is not available. Please try again.');
+    }
   }
 
-  registerWithFacebook() {
-    window.location.href = `${environment.apiUrl}/auth/facebook`;
+  private handleGoogleCredential(credential: string) {
+    this.isLoading.set(true);
+    this.error.set(null);
+    const sub = this.authService.googleSignIn(credential).subscribe({
+      next: () => {
+        this.isLoading.set(false);
+        this.router.navigate(['/home']);
+      },
+      error: (err) => {
+        this.isLoading.set(false);
+        this.error.set(err.error?.message || 'Google sign-in failed');
+      },
+    });
+    this.subscriptions.add(sub);
+  }
+
+  async registerWithFacebook() {
+    this.error.set(null);
+    this.isLoading.set(true);
+    try {
+      await loadFacebookSdk();
+      FB.init({
+        appId: environment.facebookAppId,
+        cookie: true,
+        xfbml: false,
+        version: 'v18.0',
+      });
+      FB.login(
+        (response: any) => {
+          this.ngZone.run(() => {
+            if (response.authResponse) {
+              this.handleFacebookToken(response.authResponse.accessToken);
+            } else {
+              this.isLoading.set(false);
+              this.error.set('Facebook login was cancelled.');
+            }
+          });
+        },
+        { scope: 'email,public_profile' },
+      );
+    } catch {
+      this.isLoading.set(false);
+      this.error.set('Facebook Sign-In is not available. Please try again.');
+    }
+  }
+
+  private handleFacebookToken(accessToken: string) {
+    this.isLoading.set(true);
+    this.error.set(null);
+    const sub = this.authService.facebookSignIn(accessToken).subscribe({
+      next: () => {
+        this.isLoading.set(false);
+        this.router.navigate(['/home']);
+      },
+      error: (err) => {
+        this.isLoading.set(false);
+        this.error.set(err.error?.message || 'Facebook sign-in failed');
+      },
+    });
+    this.subscriptions.add(sub);
   }
 
   // Helper method for translation with params

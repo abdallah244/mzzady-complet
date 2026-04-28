@@ -1,11 +1,17 @@
 // Development environment configuration
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:3000',
+  apiUrl: 'https://backend-cfokh2c6j-abdallahs-projects-d8c16d27.vercel.app',
   frontendUrl: 'http://localhost:4200',
 
+  // Google OAuth
+  googleClientId: '334129382230-ngs2m2rhh5t2ripbgejpu3lq6j5hjvdn.apps.googleusercontent.com',
+
+  // Facebook OAuth
+  facebookAppId: '946975937863038',
+
   // WebSocket configuration
-  wsUrl: 'ws://localhost:3000',
+  wsUrl: 'wss://backend-cfokh2c6j-abdallahs-projects-d8c16d27.vercel.app',
 
   // Feature flags
   enableDebugMode: true,

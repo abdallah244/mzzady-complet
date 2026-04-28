@@ -1,10 +1,16 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  Logger,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import {
   AuctionProduct,
   AuctionProductDocument,
 } from '../schemas/auction-product.schema';
+import { User, UserDocument } from '../schemas/user.schema';
 import { AuctionsService } from '../auctions/auctions.service';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -16,6 +22,8 @@ export class AuctionProductsService {
   constructor(
     @InjectModel(AuctionProduct.name)
     private auctionProductModel: Model<AuctionProductDocument>,
+    @InjectModel(User.name)
+    private userModel: Model<UserDocument>,
     private auctionsService: AuctionsService,
   ) {}
 
@@ -30,6 +38,18 @@ export class AuctionProductsService {
     minBidIncrement?: number,
     durationInSeconds?: number,
   ): Promise<AuctionProductDocument> {
+    // Check if OAuth user has completed their profile
+    const seller = await this.userModel.findById(userId);
+    if (
+      seller &&
+      seller.authProvider !== 'local' &&
+      !seller.isProfileComplete
+    ) {
+      throw new ForbiddenException(
+        'يجب إكمال بيانات التحقق في صفحة الملف الشخصي قبل إنشاء مزاد | Please complete your profile verification before creating an auction',
+      );
+    }
+
     const product = new this.auctionProductModel({
       userId: new Types.ObjectId(userId) as any,
       productName,
@@ -107,68 +127,13 @@ export class AuctionProductsService {
           ? `Product from ${user.nickname}`
           : `Auction Product ${id.substring(0, 8)}`);
 
-      // Copy images from auction-products to auctions folder
-      const uploadsDir = path.join(process.cwd(), 'uploads');
-      const auctionProductsDir = path.join(uploadsDir, 'auction-products');
-      const auctionsDir = path.join(uploadsDir, 'auctions');
-
-      // Ensure auctions directory exists
-      if (!fs.existsSync(auctionsDir)) {
-        fs.mkdirSync(auctionsDir, { recursive: true });
-      }
-
-      // Copy main image
-      const mainImageSource = path.join(
-        auctionProductsDir,
-        product.mainImageFilename,
-      );
-
-      if (!fs.existsSync(mainImageSource)) {
-        console.error(`Main image not found: ${mainImageSource}`);
-        throw new Error(
-          `Main image file not found: ${product.mainImageFilename}`,
-        );
-      }
-
-      const mainImageDestFilename = `auction-${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(product.mainImageFilename)}`;
-      const mainImageDest = path.join(auctionsDir, mainImageDestFilename);
-
-      fs.copyFileSync(mainImageSource, mainImageDest);
-
-      const mainImageUrl = `/uploads/auctions/${mainImageDestFilename}`;
-      const mainImageFilename = mainImageDestFilename;
-
-      // Copy additional images
-      const additionalImagesUrl: string[] = [];
-      const additionalImagesFilename: string[] = [];
-
-      for (
-        let i = 0;
-        i < (product.additionalImagesFilename?.length || 0);
-        i++
-      ) {
-        const sourceFilename = product.additionalImagesFilename[i];
-        const sourcePath = path.join(auctionProductsDir, sourceFilename);
-
-        if (!fs.existsSync(sourcePath)) {
-          console.warn(
-            `Additional image not found: ${sourcePath}, skipping...`,
-          );
-          continue;
-        }
-
-        // Use different timestamp for each image to avoid conflicts
-        const timestamp = Date.now();
-        const destFilename = `auction-${timestamp}-${i}-${Math.round(Math.random() * 1e9)}${path.extname(sourceFilename)}`;
-        const destPath = path.join(auctionsDir, destFilename);
-
-        fs.copyFileSync(sourcePath, destPath);
-        additionalImagesUrl.push(`/uploads/auctions/${destFilename}`);
-        additionalImagesFilename.push(destFilename);
-      }
+      // Images are stored in MongoDB — reuse URLs directly (no file copying needed)
+      const mainImageUrl = product.mainImageUrl;
+      const mainImageFilename = product.mainImageFilename;
+      const additionalImagesUrl = product.additionalImagesUrl || [];
+      const additionalImagesFilename = product.additionalImagesFilename || [];
 
       // Create auction with default values (admin can edit later)
-      // Use minBidIncrement and durationInSeconds from product if available
       const minBidIncrement = product.minBidIncrement || 1;
       const durationInSeconds = product.durationInSeconds || 86400;
 
@@ -176,12 +141,12 @@ export class AuctionProductsService {
         productName,
         sellerId,
         product.startingPrice,
-        minBidIncrement, // Use minBidIncrement from product
+        minBidIncrement,
         mainImageUrl,
         mainImageFilename,
         additionalImagesUrl,
         additionalImagesFilename,
-        durationInSeconds, // Use durationInSeconds from product
+        durationInSeconds,
         false, // not featured by default
         'other', // default category
       );
@@ -195,7 +160,6 @@ export class AuctionProductsService {
         error instanceof Error ? error.stack : String(error),
       );
       // Don't fail the approval if auction creation fails, but log the error
-      // The approval will still succeed even if auction creation fails
     }
 
     return savedProduct;

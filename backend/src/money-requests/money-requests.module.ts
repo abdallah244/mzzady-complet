@@ -1,9 +1,13 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { MoneyRequest, MoneyRequestSchema } from '../schemas/money-request.schema';
+import {
+  MoneyRequest,
+  MoneyRequestSchema,
+} from '../schemas/money-request.schema';
 import { User, UserSchema } from '../schemas/user.schema';
 import { MoneyRequestsController } from './money-requests.controller';
 import { MoneyRequestsService } from './money-requests.service';
+import { ImageCompressionService } from '../image-compression.service';
 
 @Module({
   imports: [
@@ -13,8 +17,7 @@ import { MoneyRequestsService } from './money-requests.service';
     ]),
   ],
   controllers: [MoneyRequestsController],
-  providers: [MoneyRequestsService],
+  providers: [MoneyRequestsService, ImageCompressionService],
   exports: [MoneyRequestsService],
 })
 export class MoneyRequestsModule {}
-

@@ -1,98 +1,325 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+<div align="center">
+  
+# 🏪 Mazzadi - Backend API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+### منصة المزادات الإلكترونية العربية الأولى
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+[![NestJS](https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white)](https://nestjs.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+[![JWT](https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=JSON%20web%20tokens&logoColor=white)](https://jwt.io/)
+[![Socket.io](https://img.shields.io/badge/Socket.io-010101?style=for-the-badge&logo=socket.io&logoColor=white)](https://socket.io/)
 
-## Description
+![Node Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)
+![License](https://img.shields.io/badge/license-MIT-blue)
+![API](https://img.shields.io/badge/API-RESTful-orange)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+</div>
 
-## Project setup
+---
 
-```bash
-$ npm install
+## 📋 جدول المحتويات
+
+- [نظرة عامة](#-نظرة-عامة)
+- [المميزات](#-المميزات)
+- [التقنيات المستخدمة](#-التقنيات-المستخدمة)
+- [هيكل المشروع](#-هيكل-المشروع)
+- [التثبيت والإعداد](#-التثبيت-والإعداد)
+- [المتغيرات البيئية](#-المتغيرات-البيئية)
+- [تشغيل المشروع](#-تشغيل-المشروع)
+- [API Documentation](#-api-documentation)
+- [النشر](#-النشر)
+
+---
+
+## 🎯 نظرة عامة
+
+**Mazzadi Backend** هو الخادم الخلفي لمنصة مزادات إلكترونية متكاملة، مبني باستخدام NestJS مع TypeScript. يوفر API قوي وآمن لإدارة المزادات، المستخدمين، المدفوعات، والمزيد.
+
+---
+
+## ✨ المميزات
+
+### 🔐 نظام المصادقة والأمان
+
+- تسجيل وتسجيل دخول المستخدمين
+- مصادقة JWT مع Refresh Tokens
+- التحقق من الهوية (OTP)
+- حماية من الهجمات (Rate Limiting, CORS)
+- تشفير كلمات المرور (bcrypt)
+
+### 🏷️ نظام المزادات
+
+- **المزادات العادية** - مزادات تقليدية مع وقت محدد
+- **المزادات السريعة (Flash)** - مزادات قصيرة المدة
+- **المزادات الجماعية** - مزادات متعددة المشاركين
+- **المزادات الخاصة** - مزادات بدعوة فقط
+- **المزادات العكسية** - البائعون يتنافسون على أقل سعر
+- **المزايدة التلقائية** - Auto-bidding system
+
+### 💰 نظام المالية
+
+- محفظة إلكترونية لكل مستخدم
+- طلبات السحب والإيداع
+- نقاط الولاء والمكافآت
+- تتبع المعاملات المالية
+
+### 📦 إدارة المنتجات
+
+- إضافة وتعديل المنتجات
+- رفع الصور المتعددة
+- التصنيفات والفلاتر
+- المقارنة بين المنتجات
+- قائمة المفضلة (Watchlist)
+
+### 💬 نظام التواصل
+
+- دردشة فورية (Real-time Chat)
+- الإشعارات الفورية (Push Notifications)
+- نظام الرسائل الداخلية
+- دعم العملاء
+
+### 👨‍💼 لوحة التحكم
+
+- إدارة المستخدمين
+- إدارة المزادات والمنتجات
+- التقارير والإحصائيات
+- إدارة الشكاوى
+
+### 📊 مميزات إضافية
+
+- نظام التقييمات والمراجعات
+- تتبع الشحنات
+- سجل النشاطات
+- نظام التوصيات الذكي
+- إحصائيات المستخدمين
+
+---
+
+## 🛠️ التقنيات المستخدمة
+
+| التقنية             | الوصف                    |
+| ------------------- | ------------------------ |
+| **NestJS**          | إطار عمل Node.js للخوادم |
+| **TypeScript**      | لغة البرمجة              |
+| **MongoDB**         | قاعدة البيانات           |
+| **Mongoose**        | ODM لـ MongoDB           |
+| **JWT**             | المصادقة والتفويض        |
+| **Socket.io**       | الاتصال الفوري           |
+| **Multer**          | رفع الملفات              |
+| **Class Validator** | التحقق من البيانات       |
+| **Swagger**         | توثيق API                |
+
+---
+
+## 📁 هيكل المشروع
+
+```
+backend/
+├── src/
+│   ├── auth/                 # المصادقة والتفويض
+│   ├── users/                # إدارة المستخدمين
+│   ├── auctions/             # المزادات العادية
+│   ├── flash-auctions/       # المزادات السريعة
+│   ├── group-auctions/       # المزادات الجماعية
+│   ├── private-auctions/     # المزادات الخاصة
+│   ├── reverse-auctions/     # المزادات العكسية
+│   ├── auto-bid/             # المزايدة التلقائية
+│   ├── bids/                 # المزايدات
+│   ├── products/             # المنتجات
+│   ├── auction-products/     # منتجات المزادات
+│   ├── cart/                 # سلة التسوق
+│   ├── chat/                 # الدردشة
+│   ├── notifications/        # الإشعارات
+│   ├── wallet/               # المحفظة
+│   ├── money-requests/       # طلبات السحب/الإيداع
+│   ├── loyalty-points/       # نقاط الولاء
+│   ├── ratings/              # التقييمات
+│   ├── reports/              # التقارير
+│   ├── comparisons/          # المقارنات
+│   ├── watchlist/            # قائمة المفضلة
+│   ├── recommendations/      # التوصيات
+│   ├── shipping-tracking/    # تتبع الشحن
+│   ├── activity-history/     # سجل النشاطات
+│   ├── user-statistics/      # إحصائيات المستخدمين
+│   ├── seller-likes/         # إعجابات البائعين
+│   ├── admin/                # لوحة التحكم
+│   ├── admin-messages/       # رسائل الإدارة
+│   ├── customer-support/     # دعم العملاء
+│   ├── identity-verification/# التحقق من الهوية
+│   ├── job-applications/     # طلبات التوظيف
+│   ├── promoted-auctions/    # المزادات المروجة
+│   ├── home/                 # الصفحة الرئيسية
+│   ├── schemas/              # MongoDB Schemas
+│   └── main.ts               # نقطة البداية
+├── uploads/                  # الملفات المرفوعة
+├── test/                     # الاختبارات
+├── render.yaml               # إعدادات Render
+└── package.json
 ```
 
-## Compile and run the project
+---
+
+## 🚀 التثبيت والإعداد
+
+### المتطلبات
+
+- Node.js >= 18.0.0
+- MongoDB >= 6.0
+- npm أو yarn
+
+### خطوات التثبيت
 
 ```bash
-# development
-$ npm run start
+# استنساخ المشروع
+git clone https://github.com/your-username/mazzadi-backend.git
 
-# watch mode
-$ npm run start:dev
+# الانتقال للمجلد
+cd mazzadi-backend
 
-# production mode
-$ npm run start:prod
+# تثبيت الحزم
+npm install
+
+# نسخ ملف البيئة
+cp .env.example .env
+
+# تعديل المتغيرات البيئية
+nano .env
 ```
 
-## Run tests
+---
+
+## 🔧 المتغيرات البيئية
+
+أنشئ ملف `.env` في المجلد الرئيسي:
+
+```env
+# Server
+PORT=3000
+NODE_ENV=development
+
+# Database
+MONGODB_URI=mongodb://localhost:27017/mazzadi
+
+# JWT
+JWT_SECRET=your-super-secret-key
+JWT_EXPIRATION=7d
+
+# CORS
+CORS_ORIGIN=http://localhost:4200
+
+# File Upload
+MAX_FILE_SIZE=5242880
+UPLOAD_PATH=./uploads
+```
+
+---
+
+## ▶️ تشغيل المشروع
 
 ```bash
-# unit tests
-$ npm run test
+# وضع التطوير
+npm run start:dev
 
-# e2e tests
-$ npm run test:e2e
+# وضع المراقبة
+npm run start:debug
 
-# test coverage
-$ npm run test:cov
+# وضع الإنتاج
+npm run build
+npm run start:prod
 ```
 
-## Deployment
+---
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## 📚 API Documentation
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### نقاط النهاية الرئيسية
+
+| Method | Endpoint             | الوصف             |
+| ------ | -------------------- | ----------------- |
+| `POST` | `/api/auth/register` | تسجيل مستخدم جديد |
+| `POST` | `/api/auth/login`    | تسجيل الدخول      |
+| `GET`  | `/api/auctions`      | جلب جميع المزادات |
+| `POST` | `/api/auctions`      | إنشاء مزاد جديد   |
+| `POST` | `/api/bids`          | تقديم مزايدة      |
+| `GET`  | `/api/products`      | جلب المنتجات      |
+| `GET`  | `/api/users/profile` | الملف الشخصي      |
+| `GET`  | `/api/wallet`        | رصيد المحفظة      |
+| `GET`  | `/api/notifications` | الإشعارات         |
+
+### Swagger Documentation
+
+بعد تشغيل الخادم، زور:
+
+```
+http://localhost:3000/api/docs
+```
+
+---
+
+## 🌐 النشر
+
+### النشر على Render
+
+1. **اربط GitHub Repository**
+2. **الملف `render.yaml` جاهز للاستخدام**
+3. **أضف المتغيرات البيئية من Dashboard**
+
+```yaml
+# render.yaml موجود في المشروع
+services:
+  - type: web
+    name: mazzadi-api
+    runtime: node
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:prod
+```
+
+### النشر اليدوي
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+# بناء المشروع
+npm run build
+
+# تشغيل الإنتاج
+npm run start:prod
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+---
 
-## Resources
+## 🧪 الاختبارات
 
-Check out a few resources that may come in handy when working with NestJS:
+```bash
+# اختبارات الوحدات
+npm run test
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+# اختبارات E2E
+npm run test:e2e
 
-## Support
+# تغطية الاختبارات
+npm run test:cov
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+---
 
-## Stay in touch
+## 📞 التواصل والدعم
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+- 📧 **البريد الإلكتروني**: support@mazzadi.com
+- 🌐 **الموقع**: [mazzadi.com](https://mazzadi.com)
+- 📱 **تويتر**: [@mazzadi](https://twitter.com/mazzadi)
 
-## License
+---
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## 📄 الرخصة
+
+هذا المشروع مرخص تحت رخصة **MIT** - راجع ملف [abdallah244](LICENSE) للتفاصيل.
+
+---
+
+<div align="center">
+
+**صنع بـ abdallah hany في مصر 🇪🇬**
+
+⭐ إذا أعجبك المشروع، لا تنسى إضافة نجمة!
+
+</div>

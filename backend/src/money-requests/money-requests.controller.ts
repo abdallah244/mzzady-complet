@@ -15,27 +15,24 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
+import { storage } from '../cloudinary.config';
 import { extname } from 'path';
+import { existsSync, mkdirSync } from 'fs';
 import { MoneyRequestsService } from './money-requests.service';
 import { AdminGuard } from '../auth/admin.guard';
+import { ImageCompressionService } from '../image-compression.service';
 
 @Controller('money-requests')
 export class MoneyRequestsController {
-  constructor(private readonly moneyRequestsService: MoneyRequestsService) {}
+  constructor(
+    private readonly moneyRequestsService: MoneyRequestsService,
+    private readonly imageCompression: ImageCompressionService,
+  ) {}
 
   @Post()
   @UseInterceptors(
     FileInterceptor('depositImage', {
-      storage: diskStorage({
-        destination: './uploads/deposits',
-        filename: (req, file, cb) => {
-          const uniqueSuffix =
-            Date.now() + '-' + Math.round(Math.random() * 1e9);
-          const ext = extname(file.originalname);
-          cb(null, `deposit-${uniqueSuffix}${ext}`);
-        },
-      }),
+      storage: storage,
       fileFilter: (req, file, cb) => {
         if (file.mimetype.startsWith('image/')) {
           cb(null, true);
@@ -66,8 +63,11 @@ export class MoneyRequestsController {
       throw new Error('Invalid amount');
     }
 
-    const depositImageUrl = `/uploads/deposits/${file.filename}`;
-    const depositImageFilename = file.filename;
+    // Compress deposit proof image and store in MongoDB
+    const depositImageUrl = await this.imageCompression.compressAndStoreProduct(
+      file.path,
+    );
+    const depositImageFilename = depositImageUrl;
 
     const request = await this.moneyRequestsService.createRequest(
       userId,

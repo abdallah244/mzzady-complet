@@ -12,7 +12,7 @@ export class HomeService {
 
   async saveImage(
     url: string,
-    section: 'hero' | 'howItWorks',
+    section: 'hero' | 'howItWorks' | 'about',
     filename: string,
     originalName: string,
     mimetype: string,
@@ -39,7 +39,7 @@ export class HomeService {
     return image.save();
   }
 
-  async getImages(section?: 'hero' | 'howItWorks'): Promise<HomeImageDocument[]> {
+  async getImages(section?: 'hero' | 'howItWorks' | 'about'): Promise<HomeImageDocument[]> {
     const query = section ? { section } : {};
     return this.homeImageModel.find(query).sort({ order: 1 }).exec();
   }

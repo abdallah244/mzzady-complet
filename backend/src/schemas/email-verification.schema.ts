@@ -11,15 +11,20 @@ export class EmailVerification {
   @Prop({ required: true })
   code: string;
 
+  // بيحدد امتى الكود يبقى Expired (للتحقق بس)
   @Prop({ required: true })
   expiresAt: Date;
 
   @Prop({ default: false })
   verified: boolean;
+
+  // ✅ بيتحدد بعد التحقق علشان يتحذف بعد 10 دقايق
+  @Prop({ default: null })
+  deleteAt?: Date;
 }
 
-export const EmailVerificationSchema = SchemaFactory.createForClass(EmailVerification);
+export const EmailVerificationSchema =
+  SchemaFactory.createForClass(EmailVerification);
 
-// Auto-delete expired verifications after 10 minutes
-EmailVerificationSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
-
+// ✅ Auto-delete when deleteAt time passes
+EmailVerificationSchema.index({ deleteAt: 1 }, { expireAfterSeconds: 0 });
