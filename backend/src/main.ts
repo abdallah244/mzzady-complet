@@ -2,12 +2,71 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { AuctionsService } from './auctions/auctions.service';
+import { existsSync, mkdirSync } from 'fs';
+import compression from 'compression';
+import helmet from 'helmet';
+import { getConnectionToken } from '@nestjs/mongoose';
+
+const logger = new Logger('Bootstrap');
+
+let cachedApp: any;
+
+// Ensure all upload directories exist (critical for Heroku ephemeral FS)
+function ensureUploadDirs() {
+  const dirs = [
+    './uploads',
+    './uploads/national-ids',
+    './uploads/profiles',
+    './uploads/products',
+    './uploads/auction-products',
+    './uploads/auctions',
+    './uploads/deposits',
+    './uploads/home',
+    './uploads/cvs',
+  ];
+  for (const dir of dirs) {
+    if (!existsSync(dir)) {
+      mkdirSync(dir, { recursive: true });
+      logger.log(`Created upload directory: ${dir}`);
+    }
+  }
+}
 
 async function bootstrap() {
+  if (cachedApp && process.env.VERCEL) {
+    return cachedApp;
+  }
+
   try {
-    const app = await NestFactory.create<NestExpressApplication>(AppModule);
+    // Ensure upload directories exist before starting (Skip on Vercel as filesystem is read-only)
+    if (!process.env.VERCEL) {
+      ensureUploadDirs();
+    }
+
+    const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+      logger:
+        process.env.NODE_ENV === 'production'
+          ? ['error', 'warn', 'log']
+          : ['error', 'warn', 'log', 'debug', 'verbose'],
+    });
+
+    // Security headers
+    app.use(
+      helmet({
+        crossOriginResourcePolicy: { policy: 'cross-origin' },
+        contentSecurityPolicy: false, // Disable CSP to allow API usage from any frontend
+      }),
+    );
+
+    // Gzip compression - reduces response sizes by ~70%
+    app.use(
+      compression({
+        threshold: 1024, // Only compress responses > 1KB
+        level: 6, // Balanced compression level
+      }),
+    );
 
     // Global Validation Pipe - validates all incoming requests
     app.useGlobalPipes(
@@ -27,6 +86,11 @@ async function bootstrap() {
       'http://localhost:4300',
       'https://mazzady.com',
       'https://www.mazzady.com',
+      'https://mazzady.works',
+      'https://www.mazzady.works',
+      'https://mazzady.vercel.app',
+      'https://mazzady-frontend.vercel.app',
+      'https://mazzadi-frontend.vercel.app',
       process.env.FRONTEND_URL,
     ].filter(Boolean);
 
@@ -56,12 +120,72 @@ async function bootstrap() {
       ],
     });
 
-    // Serve static files from uploads directory
+    // Serve static files from uploads directory with aggressive caching
     app.useStaticAssets(join(__dirname, '..', 'uploads'), {
       prefix: '/uploads',
+      maxAge: '7d', // Cache static files for 7 days
+      etag: true,
+      lastModified: true,
+      immutable: true, // Tell browsers the file won't change
+      setHeaders: (res, path) => {
+        // Extra-long cache for home page images (they rarely change)
+        if (path.includes('/home/')) {
+          res.setHeader('Cache-Control', 'public, max-age=2592000, immutable'); // 30 days
+        }
+      },
     });
-    const port = process.env.PORT ?? 3000;
-    await app.listen(port);
+
+    if (!process.env.VERCEL) {
+      const port = process.env.PORT ?? 3000;
+      await app.listen(port);
+      logger.log(`Application running on port ${port}`);
+    } else {
+      await app.init();
+      cachedApp = app.getHttpAdapter().getInstance();
+    }
+    logger.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+
+    // One-time migration: fix OAuth users with empty string phone/nationalId
+    try {
+      const connection = app.get(getConnectionToken());
+      const usersCol = connection.collection('users');
+      const r1 = await usersCol.updateMany(
+        { phone: '' },
+        { $unset: { phone: 1 } },
+      );
+      const r2 = await usersCol.updateMany(
+        { nationalId: '' },
+        { $unset: { nationalId: 1 } },
+      );
+      if (r1.modifiedCount || r2.modifiedCount) {
+        logger.log(
+          `Migration: fixed ${r1.modifiedCount} empty phones, ${r2.modifiedCount} empty nationalIds`,
+        );
+      }
+      // Drop and recreate phone index as sparse+unique to be safe
+      try {
+        await usersCol.dropIndex('phone_1');
+        await usersCol.createIndex(
+          { phone: 1 },
+          { unique: true, sparse: true },
+        );
+        logger.log('Recreated phone_1 index as sparse+unique');
+      } catch {
+        /* index may not exist */
+      }
+      try {
+        await usersCol.dropIndex('nationalId_1');
+        await usersCol.createIndex(
+          { nationalId: 1 },
+          { unique: true, sparse: true },
+        );
+        logger.log('Recreated nationalId_1 index as sparse+unique');
+      } catch {
+        /* index may not exist */
+      }
+    } catch (e) {
+      logger.warn('Migration skipped: ' + (e as Error).message);
+    }
 
     // Schedule auction status updates every minute
     const auctionsService = app.get(AuctionsService);
@@ -73,8 +197,16 @@ async function bootstrap() {
       }
     }, 60000); // Every minute
   } catch (error) {
+    logger.error('Failed to start application', error);
     process.exit(1);
   }
 }
 
-void bootstrap();
+if (!process.env.VERCEL) {
+  void bootstrap();
+}
+
+export default async (req: any, res: any) => {
+  const appInstance = await bootstrap();
+  return appInstance(req, res);
+};
