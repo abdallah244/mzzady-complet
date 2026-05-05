@@ -192,7 +192,8 @@ async function bootstrap() {
         logger.warn('Migration skipped: ' + (e as Error).message);
       }
 
-      // Schedule auction status updates every minute
+      // Schedule auction status updates every minute (Only works on Dedicated Servers)
+      // For Vercel, use Vercel Cron Jobs pointing to: POST /auctions/update-status?secret=YOUR_SECRET
       const auctionsService = app.get(AuctionsService);
       setInterval(async () => {
         try {
@@ -202,6 +203,7 @@ async function bootstrap() {
         }
       }, 60000); // Every minute
     } else {
+      logger.warn('Running on Vercel: Background scheduler (setInterval) is disabled. Please set up a Vercel Cron Job to call /auctions/update-status every minute.');
       await app.init();
       cachedApp = app.getHttpAdapter().getInstance();
     }

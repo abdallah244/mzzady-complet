@@ -21,6 +21,7 @@ import { WatchlistModule } from '../watchlist/watchlist.module';
     forwardRef(() => AutoBidModule),
     forwardRef(() => ActivityHistoryModule),
     forwardRef(() => WatchlistModule),
+    forwardRef(() => import('../auctions/auctions.module').then(m => m.AuctionsModule)),
   ],
   controllers: [BidsController],
   providers: [BidsService],

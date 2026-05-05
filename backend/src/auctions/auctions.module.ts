@@ -10,6 +10,8 @@ import { AuctionsService } from './auctions.service';
 import { ProductsService } from '../products/products.service';
 import { ImageCompressionService } from '../image-compression.service';
 
+import { AuctionsGateway } from './auctions.gateway';
+
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -21,7 +23,12 @@ import { ImageCompressionService } from '../image-compression.service';
     ]),
   ],
   controllers: [AuctionsController],
-  providers: [AuctionsService, ProductsService, ImageCompressionService],
-  exports: [AuctionsService],
+  providers: [
+    AuctionsService,
+    ProductsService,
+    ImageCompressionService,
+    AuctionsGateway,
+  ],
+  exports: [AuctionsService, AuctionsGateway],
 })
 export class AuctionsModule {}

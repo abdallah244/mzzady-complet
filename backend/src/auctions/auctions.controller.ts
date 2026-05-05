@@ -180,8 +180,20 @@ export class AuctionsController {
 
   @Delete(':id')
   @UseGuards(AdminGuard)
-  async deleteAuction(@Param('id') id: string) {
+  async deleteAuction(@Param( 'id') id: string) {
     await this.auctionsService.deleteAuction(id);
     return { success: true, message: 'Auction deleted successfully' };
+  }
+
+  @Post('update-status')
+  async triggerUpdateStatus(@Query('secret') secret: string) {
+    // Basic security: check for secret if configured in environment
+    const cronSecret = process.env['CRON_SECRET'];
+    if (cronSecret && secret !== cronSecret) {
+      throw new BadRequestException('Invalid secret');
+    }
+    
+    await this.auctionsService.updateAuctionStatus();
+    return { success: true, message: 'Auction statuses updated' };
   }
 }
