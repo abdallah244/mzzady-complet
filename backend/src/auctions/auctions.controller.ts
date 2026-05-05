@@ -84,18 +84,13 @@ export class AuctionsController {
     const mainImage = files[0];
     const additionalImages = files.slice(1, 10);
 
-    // Compress and store all images in MongoDB
-    const mainImageUrl = await this.imageCompression.compressAndStoreProduct(
-      mainImage.path,
-    );
-    const additionalImagesUrl =
-      await this.imageCompression.compressAndStoreMultiple(
-        additionalImages.map((file) => file.path),
-        { maxWidth: 1200, maxHeight: 1200, quality: 75 },
-      );
+    // Use Cloudinary URLs directly (file.path)
+    // Cloudinary storage is already configured in the interceptor
+    const mainImageUrl = mainImage.path;
+    const additionalImagesUrl = additionalImages.map((file) => file.path);
 
-    const mainImageFilename = mainImageUrl;
-    const additionalImagesFilename = additionalImagesUrl;
+    const mainImageFilename = mainImage.filename || mainImageUrl;
+    const additionalImagesFilename = additionalImages.map(f => f.filename || f.path);
 
     const duration = parseInt(durationInSeconds, 10);
     const price = parseFloat(startingPrice);

@@ -62,11 +62,10 @@ export class ProductsController {
       throw new BadRequestException('Product image is required');
     }
 
-    // Compress product image and store in MongoDB
-    const imageUrl = await this.imageCompression.compressAndStoreProduct(
-      file.path,
-    );
-    const imageFilename = imageUrl;
+    // Use Cloudinary URL directly (file.path)
+    const imageUrl = file.path;
+    const imageFilename = file.filename || imageUrl;
+    
     return this.productsService.createProduct(
       body.productName,
       parseFloat(body.price),

@@ -66,8 +66,8 @@ export class HomeController {
       );
     }
 
-    // Compress home/banner image and store in MongoDB
-    const url = await this.imageCompression.compressAndStoreHome(file.path);
+    // Use Cloudinary URL directly (file.path)
+    const url = file.path;
     const image = await this.homeService.saveImage(
       url,
       section as 'hero' | 'howItWorks',

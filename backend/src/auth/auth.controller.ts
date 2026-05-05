@@ -101,13 +101,9 @@ export class AuthController {
       );
     }
 
-    // Compress national ID images and store in MongoDB
-    const frontUrl = await this.imageCompression.compressAndStoreNationalId(
-      frontFile.path,
-    );
-    const backUrl = await this.imageCompression.compressAndStoreNationalId(
-      backFile.path,
-    );
+    // Use Cloudinary URLs directly (file.path)
+    const frontUrl = frontFile.path;
+    const backUrl = backFile.path;
 
     return this.authService.register(
       registerDto.email,
@@ -247,13 +243,9 @@ export class AuthController {
       );
     }
 
-    // Compress national ID images and store in MongoDB
-    const frontUrl = await this.imageCompression.compressAndStoreNationalId(
-      frontFile.path,
-    );
-    const backUrl = await this.imageCompression.compressAndStoreNationalId(
-      backFile.path,
-    );
+    // Use Cloudinary URLs directly (file.path)
+    const frontUrl = frontFile.path;
+    const backUrl = backFile.path;
 
     return this.authService.uploadNationalIdImages(userId, {
       frontUrl,
@@ -300,10 +292,8 @@ export class AuthController {
       throw new BadRequestException('Avatar image is required');
     }
 
-    // Compress avatar and store in MongoDB
-    const avatarUrl = await this.imageCompression.compressAndStoreAvatar(
-      file.path,
-    );
+    // Use Cloudinary URL directly (file.path)
+    const avatarUrl = file.path;
     return this.authService.updateProfileAvatar(userId, avatarUrl, avatarUrl);
   }
 
