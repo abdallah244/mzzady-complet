@@ -15,7 +15,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { storage } from '../cloudinary.config';
+import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import { MoneyRequestsService } from './money-requests.service';
@@ -32,7 +32,21 @@ export class MoneyRequestsController {
   @Post()
   @UseInterceptors(
     FileInterceptor('depositImage', {
-      storage: storage,
+      storage: diskStorage({
+        destination: (req, file, cb) => {
+          const uploadPath = './uploads/deposits';
+          if (!existsSync(uploadPath)) {
+            mkdirSync(uploadPath, { recursive: true });
+          }
+          cb(null, uploadPath);
+        },
+        filename: (req, file, cb) => {
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const ext = extname(file.originalname);
+          cb(null, `deposit-${uniqueSuffix}${ext}`);
+        },
+      }),
       fileFilter: (req, file, cb) => {
         if (file.mimetype.startsWith('image/')) {
           cb(null, true);

@@ -233,8 +233,8 @@ export class HomeComponent implements OnInit, OnDestroy {
         next: (response) => {
           clearTimeout(timeout);
           if (response.success && response.images.length > 0) {
-            const imageUrls = response.images.map((img) => `${environment.apiUrl}${img.url}`);
-            this.heroImages.set(imageUrls);
+            const imageUrls = response.images.map((img) => this.getAssetUrl(img.url));
+            this.heroImages.set(imageUrls as string[]);
             // Preload the first hero image for faster LCP
             if (imageUrls[0]) {
               const link = document.createElement('link');
@@ -272,7 +272,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         next: (response) => {
           if (response.success && response.images.length > 0) {
             this.howItWorksImages.set(
-              response.images.map((img) => `${environment.apiUrl}${img.url}`),
+              response.images.map((img) => this.getAssetUrl(img.url)) as string[],
             );
           }
         },
@@ -282,6 +282,10 @@ export class HomeComponent implements OnInit, OnDestroy {
       });
   }
 
+  getAssetUrl(url: string): string {
+    return url.startsWith('http') ? url : `${environment.apiUrl}${url}`;
+  }
+
   loadAboutImages() {
     this.http
       .get<{ success: boolean; images: any[] }>(`${environment.apiUrl}/home/images/about`)
@@ -289,7 +293,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         next: (response) => {
           if (response.success && response.images.length > 0) {
             this.aboutImages.set(
-              response.images.map((img) => `${environment.apiUrl}${img.url}`),
+              response.images.map((img) => this.getAssetUrl(img.url)),
             );
           }
         },

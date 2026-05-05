@@ -1,0 +1,8 @@
+{
+  "name": "mazzady-monorepo",
+  "private": true,
+  "scripts": {
+    "build:backend": "cd backend && npm install --legacy-peer-deps && npm run build",
+    "build:frontend": "cd frontend && npm install --legacy-peer-deps && npm run build"
+  }
+}

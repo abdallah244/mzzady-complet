@@ -6,7 +6,7 @@ import mongoose from 'mongoose';
 import * as bcrypt from 'bcrypt';
 
 const MONGO_URI =
-  'mongodb+srv://abdallahhfares_db_user:WApo4Tw3H8Ls0tJ6@mazzady3.iorvzi8.mongodb.net/projectdata?appName=mazzady3';
+  'mongodb+srv://abdallahhfares_db_user:87p3y73Sa3w2splG@mazzady.tedodg0.mongodb.net/projectdata?appName=mazzady';
 
 // 15 auctions across 9 categories, durations 1 week → 3 months
 const auctionData = [
@@ -233,9 +233,7 @@ async function seed() {
     );
   }
 
-  console.log(
-    `\nDone! Created ${created} auctions, ${sellers.length} sellers.`,
-  );
+  console.log(`\nDone! Created ${created} auctions, ${sellers.length} sellers.`);
   console.log('Seller password: Test@12345');
   console.log('Sellers:', sellers.map((s) => s.email).join(', '));
 

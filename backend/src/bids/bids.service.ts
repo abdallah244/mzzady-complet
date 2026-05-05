@@ -4,7 +4,6 @@ import {
   BadRequestException,
   Inject,
   forwardRef,
-  Logger,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -16,12 +15,9 @@ import { AutoBidService } from '../auto-bid/auto-bid.service';
 import { ActivityHistoryService } from '../activity-history/activity-history.service';
 import { WatchlistService } from '../watchlist/watchlist.service';
 import { ActivityType } from '../schemas/activity-history.schema';
-import { AuctionsGateway } from '../auctions/auctions.gateway';
 
 @Injectable()
 export class BidsService {
-  private readonly logger = new Logger(BidsService.name);
-
   constructor(
     @InjectModel(Bid.name)
     private bidModel: Model<BidDocument>,
@@ -37,8 +33,6 @@ export class BidsService {
     private activityHistoryService: ActivityHistoryService,
     @Inject(forwardRef(() => WatchlistService))
     private watchlistService: WatchlistService,
-    @Inject(forwardRef(() => AuctionsGateway))
-    private auctionsGateway: AuctionsGateway,
   ) {}
 
   async placeBid(
@@ -67,9 +61,9 @@ export class BidsService {
       throw new NotFoundException('User not found');
     }
 
-    // Validate bid amount and wallet balance
+    // Validate bid amount
     const currentHighestBid = auction.highestBid || auction.startingPrice;
-    const minBidAmount = currentHighestBid + (auction.minBidIncrement || 1);
+    const minBidAmount = currentHighestBid + auction.minBidIncrement;
 
     if (amount < minBidAmount) {
       throw new BadRequestException(
@@ -77,6 +71,7 @@ export class BidsService {
       );
     }
 
+    // Validate wallet balance
     const walletBalance = user.walletBalance || 0;
     if (walletBalance < amount) {
       throw new BadRequestException(
@@ -84,47 +79,7 @@ export class BidsService {
       );
     }
 
-    // Atomic update of the auction to prevent race conditions
-    // We check if the highestBid is still what we expected
-    const updatedAuction = await this.auctionModel.findOneAndUpdate(
-      {
-        _id: new Types.ObjectId(auctionId),
-        status: 'active',
-        endDate: { $gt: now },
-        $or: [
-          { highestBid: { $lt: amount } },
-          { highestBid: null }
-        ]
-      },
-      {
-        $set: {
-          highestBid: amount,
-          highestBidderId: new Types.ObjectId(userId),
-        }
-      },
-      { new: true }
-    );
-
-    if (!updatedAuction) {
-      throw new BadRequestException('Bid too low or auction ended. Please try again.');
-    }
-
-    // Auction Extension Logic (Anti-sniping)
-    // If bid is placed in the last 2 minutes, extend by 3 minutes
-    const extensionThreshold = 2 * 60 * 1000; // 2 minutes
-    const extensionAmount = 3 * 60 * 1000; // 3 minutes
-    const timeRemaining = updatedAuction.endDate.getTime() - now.getTime();
-
-    if (timeRemaining < extensionThreshold) {
-      const newEndDate = new Date(now.getTime() + extensionAmount);
-      await this.auctionModel.findByIdAndUpdate(auctionId, {
-        $set: { endDate: newEndDate }
-      });
-      updatedAuction.endDate = newEndDate;
-      this.logger.log(`Auction ${auctionId} extended due to late bid`);
-    }
-
-    // Create bid record
+    // Create bid
     const bid = new this.bidModel({
       auctionId: new Types.ObjectId(auctionId),
       userId: new Types.ObjectId(userId),
@@ -133,17 +88,13 @@ export class BidsService {
 
     const savedBid = await bid.save();
 
-    // Notify all users in the auction room about the new bid (Real-time)
-    this.auctionsGateway.emitNewBid(auctionId, {
-      auctionId,
-      amount,
-      highestBidderId: userId,
-      highestBidderName: user.nickname || user.firstName,
-      endDate: updatedAuction.endDate,
-    });
-
     // Get previous highest bidder to notify them
     const previousHighestBidderId = auction.highestBidderId;
+
+    // Update auction with new highest bid
+    auction.highestBid = amount;
+    auction.highestBidderId = new Types.ObjectId(userId);
+    await auction.save();
 
     // Send notification to previous highest bidder if exists
     if (

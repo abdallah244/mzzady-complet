@@ -20,7 +20,7 @@ import {
   FileInterceptor,
   FileFieldsInterceptor,
 } from '@nestjs/platform-express';
-import { storage } from '../cloudinary.config';
+import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import type { Request, Response } from 'express';
@@ -55,7 +55,21 @@ export class AuthController {
         { name: 'nationalIdBack', maxCount: 1 },
       ],
       {
-        storage: storage,
+        storage: diskStorage({
+          destination: (req, file, cb) => {
+            const uploadPath = './uploads/national-ids';
+            if (!existsSync(uploadPath)) {
+              mkdirSync(uploadPath, { recursive: true });
+            }
+            cb(null, uploadPath);
+          },
+          filename: (req, file, cb) => {
+            const uniqueSuffix =
+              Date.now() + '-' + Math.round(Math.random() * 1e9);
+            const ext = extname(file.originalname);
+            cb(null, `nid-${uniqueSuffix}${ext}`);
+          },
+        }),
         fileFilter: (req, file, cb) => {
           if (file.mimetype.startsWith('image/')) {
             cb(null, true);
@@ -101,9 +115,13 @@ export class AuthController {
       );
     }
 
-    // Use Cloudinary URLs directly (file.path)
-    const frontUrl = frontFile.path;
-    const backUrl = backFile.path;
+    // Compress national ID images and store in MongoDB
+    const frontUrl = await this.imageCompression.compressAndStoreNationalId(
+      frontFile.path,
+    );
+    const backUrl = await this.imageCompression.compressAndStoreNationalId(
+      backFile.path,
+    );
 
     return this.authService.register(
       registerDto.email,
@@ -197,7 +215,21 @@ export class AuthController {
         { name: 'nationalIdBack', maxCount: 1 },
       ],
       {
-        storage: storage,
+        storage: diskStorage({
+          destination: (req, file, cb) => {
+            const uploadPath = './uploads/national-ids';
+            if (!existsSync(uploadPath)) {
+              mkdirSync(uploadPath, { recursive: true });
+            }
+            cb(null, uploadPath);
+          },
+          filename: (req, file, cb) => {
+            const uniqueSuffix =
+              Date.now() + '-' + Math.round(Math.random() * 1e9);
+            const ext = extname(file.originalname);
+            cb(null, `nid-${uniqueSuffix}${ext}`);
+          },
+        }),
         fileFilter: (req, file, cb) => {
           if (file.mimetype.startsWith('image/')) {
             cb(null, true);
@@ -243,9 +275,13 @@ export class AuthController {
       );
     }
 
-    // Use Cloudinary URLs directly (file.path)
-    const frontUrl = frontFile.path;
-    const backUrl = backFile.path;
+    // Compress national ID images and store in MongoDB
+    const frontUrl = await this.imageCompression.compressAndStoreNationalId(
+      frontFile.path,
+    );
+    const backUrl = await this.imageCompression.compressAndStoreNationalId(
+      backFile.path,
+    );
 
     return this.authService.uploadNationalIdImages(userId, {
       frontUrl,
@@ -271,7 +307,21 @@ export class AuthController {
   @Post('profile/:userId/avatar')
   @UseInterceptors(
     FileInterceptor('avatar', {
-      storage: storage,
+      storage: diskStorage({
+        destination: (req, file, cb) => {
+          const uploadPath = './uploads/profiles';
+          if (!existsSync(uploadPath)) {
+            mkdirSync(uploadPath, { recursive: true });
+          }
+          cb(null, uploadPath);
+        },
+        filename: (req, file, cb) => {
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const ext = extname(file.originalname);
+          cb(null, `profile-${uniqueSuffix}${ext}`);
+        },
+      }),
       fileFilter: (req, file, cb) => {
         if (file.mimetype.startsWith('image/')) {
           cb(null, true);
@@ -292,8 +342,10 @@ export class AuthController {
       throw new BadRequestException('Avatar image is required');
     }
 
-    // Use Cloudinary URL directly (file.path)
-    const avatarUrl = file.path;
+    // Compress avatar and store in MongoDB
+    const avatarUrl = await this.imageCompression.compressAndStoreAvatar(
+      file.path,
+    );
     return this.authService.updateProfileAvatar(userId, avatarUrl, avatarUrl);
   }
 

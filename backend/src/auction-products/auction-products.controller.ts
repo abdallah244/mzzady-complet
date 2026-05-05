@@ -13,7 +13,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { storage } from '../cloudinary.config';
+import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import { AuctionProductsService } from './auction-products.service';
@@ -30,7 +30,20 @@ export class AuctionProductsController {
   @Post()
   @UseInterceptors(
     FilesInterceptor('images', 10, {
-      storage: storage,
+      storage: diskStorage({
+        destination: (req, file, cb) => {
+          const uploadPath = './uploads/auction-products';
+          if (!existsSync(uploadPath)) {
+            mkdirSync(uploadPath, { recursive: true });
+          }
+          cb(null, uploadPath);
+        },
+        filename: (req, file, cb) => {
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
+          cb(null, `product-${uniqueSuffix}${extname(file.originalname)}`);
+        },
+      }),
       fileFilter: (req, file, cb) => {
         if (file.mimetype.startsWith('image/')) {
           cb(null, true);

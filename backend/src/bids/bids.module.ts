@@ -9,7 +9,6 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { AutoBidModule } from '../auto-bid/auto-bid.module';
 import { ActivityHistoryModule } from '../activity-history/activity-history.module';
 import { WatchlistModule } from '../watchlist/watchlist.module';
-import { AuctionsModule } from '../auctions/auctions.module';
 
 @Module({
   imports: [
@@ -22,7 +21,6 @@ import { AuctionsModule } from '../auctions/auctions.module';
     forwardRef(() => AutoBidModule),
     forwardRef(() => ActivityHistoryModule),
     forwardRef(() => WatchlistModule),
-    forwardRef(() => AuctionsModule),
   ],
   controllers: [BidsController],
   providers: [BidsService],

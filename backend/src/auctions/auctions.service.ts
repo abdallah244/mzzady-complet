@@ -3,6 +3,8 @@ import {
   NotFoundException,
   BadRequestException,
   Logger,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -11,7 +13,8 @@ import { User, UserDocument } from '../schemas/user.schema';
 import { Product, ProductDocument } from '../schemas/product.schema';
 import { AuctionsGateway } from './auctions.gateway';
 import { NotificationsService } from '../notifications/notifications.service';
-import { forwardRef, Inject } from '@nestjs/common';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class AuctionsService {
@@ -24,6 +27,7 @@ export class AuctionsService {
     private userModel: Model<UserDocument>,
     @InjectModel(Product.name)
     private productModel: Model<ProductDocument>,
+    @Inject(forwardRef(() => AuctionsGateway))
     private auctionsGateway: AuctionsGateway,
     @Inject(forwardRef(() => NotificationsService))
     private notificationsService: NotificationsService,
@@ -300,62 +304,74 @@ export class AuctionsService {
     // Create products for ended auctions
     for (const auction of expiredAuctions) {
       try {
-        const auctionIdStr = auction._id.toString();
-        
         // Check if product already exists for this auction
-        const existingProduct = await this.productModel.findOne({
-          auctionId: new Types.ObjectId(auctionIdStr),
-        } as any).exec();
+        const auctionIdStr =
+          auction._id instanceof Types.ObjectId
+            ? auction._id.toString()
+            : String(auction._id as any);
+        const existingProduct = await this.productModel
+          .findOne({
+            auctionId: new Types.ObjectId(auctionIdStr),
+          } as any)
+          .exec();
 
-        if (existingProduct) continue;
+        if (existingProduct) {
+          continue; // Skip if product already exists
+        }
 
-        // Use the existing auction image URL for the product (No fs.copyFileSync needed)
-        // This makes it compatible with Vercel and Cloudinary
-        const productImageUrl = auction.mainImageUrl;
-        const productImageFilename = auction.mainImageFilename;
+        // Copy main image from auctions to products folder
+        const uploadsDir = path.join(process.cwd(), 'uploads');
+        const auctionsDir = path.join(uploadsDir, 'auctions');
+        const productsDir = path.join(uploadsDir, 'products');
 
-        // Determine price: use highest bid if exists, otherwise use starting price
-        const productPrice = auction.highestBid || auction.startingPrice;
+        // Ensure products directory exists
+        if (!fs.existsSync(productsDir)) {
+          fs.mkdirSync(productsDir, { recursive: true });
+        }
 
-        // Create product with pending status
-        const product = new this.productModel({
-          productName: auction.productName,
-          price: productPrice,
-          imageUrl: productImageUrl,
-          imageFilename: productImageFilename,
-          userId: auction.sellerId,
-          status: 'pending', // Pending until admin approves
-          auctionId: new Types.ObjectId(auctionIdStr),
-          addedAt: new Date(),
-        });
+        // Copy main image
+        const mainImageSource = path.join(
+          auctionsDir,
+          auction.mainImageFilename,
+        );
+        if (fs.existsSync(mainImageSource)) {
+          const productImageFilename = `product-${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(auction.mainImageFilename)}`;
+          const productImageDest = path.join(productsDir, productImageFilename);
+          fs.copyFileSync(mainImageSource, productImageDest);
 
-        const savedProduct = await product.save();
-        this.logger.log(`[UpdateAuctionStatus] Product created from ended auction: ${auctionIdStr}`);
+          const productImageUrl = `/uploads/products/${productImageFilename}`;
 
-        // Notify winner and seller (Real-time & DB Notification)
-        if (auction.highestBidderId) {
-          const winnerId = auction.highestBidderId.toString();
-          
-          // Emit WebSocket event
-          this.auctionsGateway.emitAuctionEnded(auctionIdStr, {
-            winnerId,
-            amount: auction.highestBid,
-            productId: savedProduct._id
-          });
+          // Determine price: use highest bid if exists, otherwise use starting price
+          const productPrice = auction.highestBid || auction.startingPrice;
 
-          // DB Notification for Winner
-          await this.notificationsService.createNotification(
-            winnerId,
-            'auction_won' as any,
-            'مبروك! لقد فزت بالمزاد',
-            `لقد فزت بمزاد ${auction.productName} بمبلغ ${auction.highestBid} EGP`,
-            auctionIdStr,
-            savedProduct._id.toString(),
-            `/products/${savedProduct._id}`
+          // Create product with pending status
+          const auctionIdValue =
+            auction._id instanceof Types.ObjectId
+              ? auction._id
+              : new Types.ObjectId(String(auction._id as any));
+
+          const product = new this.productModel({
+            productName: auction.productName,
+            price: productPrice,
+            imageUrl: productImageUrl,
+            imageFilename: productImageFilename,
+            userId: auction.sellerId,
+            status: 'pending', // Pending until admin approves
+            auctionId: auctionIdValue,
+            addedAt: new Date(),
+          } as any);
+
+          const savedProduct = await product.save();
+          this.logger.log(
+            `[UpdateAuctionStatus] Product created from ended auction: Auction ID: ${auction._id}, Product ID: ${savedProduct._id}`,
           );
         }
       } catch (error) {
-        this.logger.error(`Error closing auction ${auction._id}:`, error);
+        this.logger.error(
+          `Error creating product from auction ${auction._id}:`,
+          error,
+        );
+        // Continue with other auctions even if one fails
       }
     }
   }

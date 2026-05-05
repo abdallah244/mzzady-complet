@@ -11,7 +11,7 @@ import {
   Header,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { storage } from '../cloudinary.config';
+import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import { HomeService } from './home.service';
@@ -24,20 +24,24 @@ export class HomeController {
     private readonly imageCompression: ImageCompressionService,
   ) {
     // Create uploads directory if it doesn't exist
-    if (!process.env.VERCEL) {
-      const uploadsDir = './uploads/home';
-      if (!existsSync(uploadsDir)) {
-        if (!process.env.VERCEL) {
-          mkdirSync(uploadsDir, { recursive: true });
-        }
-      }
+    const uploadsDir = './uploads/home';
+    if (!existsSync(uploadsDir)) {
+      mkdirSync(uploadsDir, { recursive: true });
     }
   }
 
   @Post('upload/:section')
   @UseInterceptors(
     FileInterceptor('image', {
-      storage: storage,
+      storage: diskStorage({
+        destination: './uploads/home',
+        filename: (req, file, cb) => {
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const ext = extname(file.originalname);
+          cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
+        },
+      }),
       limits: {
         fileSize: 5 * 1024 * 1024, // 5MB
       },
@@ -66,8 +70,8 @@ export class HomeController {
       );
     }
 
-    // Use Cloudinary URL directly (file.path)
-    const url = file.path;
+    // Compress home/banner image and store in MongoDB
+    const url = await this.imageCompression.compressAndStoreHome(file.path);
     const image = await this.homeService.saveImage(
       url,
       section as 'hero' | 'howItWorks',
@@ -106,13 +110,13 @@ export class HomeController {
   @Get('images/:section')
   @Header('Cache-Control', 'public, max-age=300, stale-while-revalidate=600')
   async getImagesBySection(@Param('section') section: string) {
-    if (section !== 'hero' && section !== 'howItWorks' && section !== 'about') {
+    if (section !== 'hero' && section !== 'howItWorks') {
       throw new BadRequestException(
-        'Invalid section. Must be "hero", "howItWorks", or "about"',
+        'Invalid section. Must be "hero" or "howItWorks"',
       );
     }
     const images = await this.homeService.getImages(
-      section as 'hero' | 'howItWorks' | 'about',
+      section as 'hero' | 'howItWorks',
     );
     return {
       success: true,

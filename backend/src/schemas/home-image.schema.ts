@@ -8,7 +8,7 @@ export class HomeImage {
   @Prop({ required: true })
   url: string;
 
-  @Prop({ required: true, enum: ['hero', 'howItWorks', 'about'] })
+  @Prop({ required: true, enum: ['hero', 'howItWorks'] })
   section: string;
 
   @Prop({ required: true })

@@ -13,7 +13,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { storage } from '../cloudinary.config';
+import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import { AuctionsService } from './auctions.service';
@@ -41,7 +41,21 @@ export class AuctionsController {
   @UseGuards(AdminGuard)
   @UseInterceptors(
     FilesInterceptor('images', 10, {
-      storage: storage,
+      storage: diskStorage({
+        destination: (req, file, cb) => {
+          const uploadPath = './uploads/auctions';
+          if (!existsSync(uploadPath)) {
+            mkdirSync(uploadPath, { recursive: true });
+          }
+          cb(null, uploadPath);
+        },
+        filename: (req, file, cb) => {
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const ext = extname(file.originalname);
+          cb(null, `auction-${uniqueSuffix}${ext}`);
+        },
+      }),
       fileFilter: (req, file, cb) => {
         if (file.mimetype.startsWith('image/')) {
           cb(null, true);
@@ -84,13 +98,18 @@ export class AuctionsController {
     const mainImage = files[0];
     const additionalImages = files.slice(1, 10);
 
-    // Use Cloudinary URLs directly (file.path)
-    // Cloudinary storage is already configured in the interceptor
-    const mainImageUrl = mainImage.path;
-    const additionalImagesUrl = additionalImages.map((file) => file.path);
+    // Compress and store all images in MongoDB
+    const mainImageUrl = await this.imageCompression.compressAndStoreProduct(
+      mainImage.path,
+    );
+    const additionalImagesUrl =
+      await this.imageCompression.compressAndStoreMultiple(
+        additionalImages.map((file) => file.path),
+        { maxWidth: 1200, maxHeight: 1200, quality: 75 },
+      );
 
-    const mainImageFilename = mainImage.filename || mainImageUrl;
-    const additionalImagesFilename = additionalImages.map(f => f.filename || f.path);
+    const mainImageFilename = mainImageUrl;
+    const additionalImagesFilename = additionalImagesUrl;
 
     const duration = parseInt(durationInSeconds, 10);
     const price = parseFloat(startingPrice);
@@ -175,20 +194,8 @@ export class AuctionsController {
 
   @Delete(':id')
   @UseGuards(AdminGuard)
-  async deleteAuction(@Param( 'id') id: string) {
+  async deleteAuction(@Param('id') id: string) {
     await this.auctionsService.deleteAuction(id);
     return { success: true, message: 'Auction deleted successfully' };
-  }
-
-  @Get('update-status')
-  async triggerUpdateStatus(@Query('secret') secret: string) {
-    // Basic security: check for secret if configured in environment
-    const cronSecret = process.env['CRON_SECRET'];
-    if (cronSecret && secret !== cronSecret) {
-      throw new BadRequestException('Invalid secret');
-    }
-    
-    await this.auctionsService.updateAuctionStatus();
-    return { success: true, message: 'Auction statuses updated' };
   }
 }

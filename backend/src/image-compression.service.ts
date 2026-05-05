@@ -27,7 +27,7 @@ export class ImageCompressionService {
       quality?: number;
     } = {},
   ): Promise<{ newPath: string; newFilename: string }> {
-    const { maxWidth = 4000, maxHeight = 4000, quality = 100 } = options;
+    const { maxWidth = 1200, maxHeight = 1200, quality = 80 } = options;
 
     try {
       const dir = path.dirname(filePath);

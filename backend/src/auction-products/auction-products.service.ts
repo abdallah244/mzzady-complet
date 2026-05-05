@@ -2,6 +2,8 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  Inject,
+  forwardRef,
   Logger,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -24,6 +26,7 @@ export class AuctionProductsService {
     private auctionProductModel: Model<AuctionProductDocument>,
     @InjectModel(User.name)
     private userModel: Model<UserDocument>,
+    @Inject(forwardRef(() => AuctionsService))
     private auctionsService: AuctionsService,
   ) {}
 
