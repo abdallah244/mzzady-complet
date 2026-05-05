@@ -43,6 +43,6 @@ import { ImageCompressionService } from '../image-compression.service';
     JwtAuthGuard,
     ImageCompressionService,
   ],
-  exports: [AuthService, JwtModule, PassportModule, JwtAuthGuard],
+  exports: [AuthService, JwtModule, PassportModule, JwtAuthGuard, EmailService],
 })
 export class AuthModule {}

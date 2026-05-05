@@ -11,6 +11,7 @@ import { Bid, BidDocument } from '../schemas/bid.schema';
 import { Auction, AuctionDocument } from '../schemas/auction.schema';
 import { User, UserDocument } from '../schemas/user.schema';
 import { NotificationsService } from '../notifications/notifications.service';
+import { EmailService } from '../auth/email.service';
 import { AutoBidService } from '../auto-bid/auto-bid.service';
 import { ActivityHistoryService } from '../activity-history/activity-history.service';
 import { WatchlistService } from '../watchlist/watchlist.service';
@@ -27,6 +28,7 @@ export class BidsService {
     private userModel: Model<UserDocument>,
     @Inject(forwardRef(() => NotificationsService))
     private notificationsService: NotificationsService,
+    private readonly emailService: EmailService,
     @Inject(forwardRef(() => AutoBidService))
     private autoBidService: AutoBidService,
     @Inject(forwardRef(() => ActivityHistoryService))

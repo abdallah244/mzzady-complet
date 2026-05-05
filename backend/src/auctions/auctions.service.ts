@@ -13,6 +13,7 @@ import { User, UserDocument } from '../schemas/user.schema';
 import { Product, ProductDocument } from '../schemas/product.schema';
 import { AuctionsGateway } from './auctions.gateway';
 import { NotificationsService } from '../notifications/notifications.service';
+import { EmailService } from '../auth/email.service';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -31,6 +32,7 @@ export class AuctionsService {
     private auctionsGateway: AuctionsGateway,
     @Inject(forwardRef(() => NotificationsService))
     private notificationsService: NotificationsService,
+    private readonly emailService: EmailService,
   ) {}
 
   async createAuction(

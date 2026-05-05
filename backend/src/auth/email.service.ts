@@ -57,4 +57,32 @@ export class EmailService {
       throw new Error('Failed to send verification email');
     }
   }
+
+  async sendNotificationEmail(email: string, subject: string, message: string): Promise<void> {
+    const mailOptions = {
+      from: 'abdallahhfares@gmail.com',
+      to: email,
+      subject: subject,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #161616; color: #ffffff;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #d4af37; margin: 0;">Mazzady</h1>
+          </div>
+          <div style="background-color: #1a1a1a; padding: 30px; border-radius: 8px; border: 2px solid #d4af37;">
+            <h2 style="color: #d4af37; margin-top: 0;">${subject}</h2>
+            <p style="color: #ffffff; font-size: 16px; line-height: 1.6;">
+              ${message}
+            </p>
+          </div>
+        </div>
+      `,
+    };
+
+    try {
+      this.logger.log(`Sending notification to ${email}: ${subject}`);
+      await this.transporter.sendMail(mailOptions);
+    } catch (error) {
+      this.logger.error('Error sending notification email:', error);
+    }
+  }
 }
