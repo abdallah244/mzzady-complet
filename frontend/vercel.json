@@ -1,8 +1,6 @@
 {
   "buildCommand": "npx ng build --configuration production",
   "outputDirectory": "dist/frontend/browser",
-  "framework": null,
-  "installCommand": "npm install --legacy-peer-deps",
   "headers": [
     {
       "source": "/:path*.(js|css|woff2|ttf|eot|ico|svg|png|jpg|jpeg|gif|webp|avif)",

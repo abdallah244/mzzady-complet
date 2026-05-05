@@ -67,7 +67,8 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   // Hero Images - يتم جلبها من قاعدة البيانات
   heroImages = signal<string[]>([]);
-  howItWorksImages = signal<string[]>([]);\n  aboutImages = signal<string[]>([]);
+  howItWorksImages = signal<string[]>([]);
+  aboutImages = signal<string[]>([]);
   featuredAuctions = signal<any[]>([]);
 
   // Statistics
@@ -281,7 +282,21 @@ export class HomeComponent implements OnInit, OnDestroy {
       });
   }
 
-  loadAboutImages() {\n    this.http\n      .get<{ success: boolean; images: any[] }>(${environment.apiUrl}/home/images/about)\n      .subscribe({\n        next: (response) => {\n          if (response.success && response.images.length > 0) {\n            this.aboutImages.set(\n              response.images.map((img) => ${environment.apiUrl})\n            );\n          }\n        }\n      });\n  }\n\n  loadFeaturedAuctions() {
+  loadAboutImages() {
+    this.http
+      .get<{ success: boolean; images: any[] }>(`${environment.apiUrl}/home/images/about`)
+      .subscribe({
+        next: (response) => {
+          if (response.success && response.images.length > 0) {
+            this.aboutImages.set(
+              response.images.map((img) => `${environment.apiUrl}${img.url}`),
+            );
+          }
+        },
+      });
+  }
+
+  loadFeaturedAuctions() {
     this.featuredLoading.set(true);
     this.http.get<any[]>(`${environment.apiUrl}/auctions/featured`).subscribe({
       next: (auctions) => {

@@ -305,7 +305,7 @@ export class AuctionsService {
         // Check if product already exists for this auction
         const existingProduct = await this.productModel.findOne({
           auctionId: new Types.ObjectId(auctionIdStr),
-        }).exec();
+        } as any).exec();
 
         if (existingProduct) continue;
 
