@@ -102,10 +102,5 @@ UserSchema.set('toObject', {
 });
 
 // Database indexes for better query performance
-UserSchema.index({ email: 1 }, { unique: true });
-UserSchema.index({ phone: 1 }, { sparse: true });
-UserSchema.index({ nationalId: 1 }, { sparse: true });
-UserSchema.index({ nickname: 1 }, { unique: true });
-UserSchema.index({ isOnline: 1 });
 UserSchema.index({ createdAt: -1 });
 UserSchema.index({ authProvider: 1 });

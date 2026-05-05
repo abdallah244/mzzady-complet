@@ -43,6 +43,10 @@ lerna-debug.log*
 .env.production.local
 .env.prod.test
 .env.test
+.env*.backup
+.env*backup
+*.backup
+config.bat
 
 # Vercel
 .vercel
