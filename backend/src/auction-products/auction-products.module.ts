@@ -10,6 +10,7 @@ import { Product, ProductSchema } from '../schemas/product.schema';
 import { AuctionProductsController } from './auction-products.controller';
 import { AuctionProductsService } from './auction-products.service';
 import { AuctionsModule } from '../auctions/auctions.module';
+import { AuthModule } from '../auth/auth.module';
 import { ImageCompressionService } from '../image-compression.service';
 
 @Module({
@@ -21,6 +22,7 @@ import { ImageCompressionService } from '../image-compression.service';
       { name: Product.name, schema: ProductSchema },
     ]),
     forwardRef(() => AuctionsModule),
+    AuthModule,
   ],
   controllers: [AuctionProductsController],
   providers: [AuctionProductsService, ImageCompressionService],

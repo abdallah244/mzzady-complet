@@ -10,6 +10,7 @@ import { AuctionsService } from './auctions.service';
 import { ImageCompressionService } from '../image-compression.service';
 import { AuctionsGateway } from './auctions.gateway';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { AuthModule } from '../auth/auth.module';
 
 @Global()
 @Module({
@@ -22,6 +23,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
       { name: CartItem.name, schema: CartItemSchema },
     ]),
     forwardRef(() => NotificationsModule),
+    AuthModule,
   ],
   controllers: [AuctionsController],
   providers: [

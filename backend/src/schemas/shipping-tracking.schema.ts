@@ -59,7 +59,6 @@ export const ShippingTrackingSchema =
   SchemaFactory.createForClass(ShippingTracking);
 
 // Database indexes for better query performance
-ShippingTrackingSchema.index({ invoiceId: 1 }, { unique: true });
 ShippingTrackingSchema.index({ userId: 1 });
 ShippingTrackingSchema.index({ status: 1 });
 ShippingTrackingSchema.index({ trackingNumber: 1 });
