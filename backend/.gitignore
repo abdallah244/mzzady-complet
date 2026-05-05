@@ -56,4 +56,5 @@ pids
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 .vercel
-\n.env.prod.test\n.env.test
+.env.prod.test
+.env.test

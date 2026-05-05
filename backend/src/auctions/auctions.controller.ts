@@ -185,7 +185,7 @@ export class AuctionsController {
     return { success: true, message: 'Auction deleted successfully' };
   }
 
-  @Post('update-status')
+  @Get('update-status')
   async triggerUpdateStatus(@Query('secret') secret: string) {
     // Basic security: check for secret if configured in environment
     const cronSecret = process.env['CRON_SECRET'];
